@@ -1,0 +1,73 @@
+# Git files
+.git
+.gitignore
+.gitmodules
+.github
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+
+# Virtual environments
+.venv
+venv
+ENV
+env
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Log files (exclude logs content but keep directory structure)
+logs/*
+!logs/.gitkeep
+*.log
+
+# Temporary files (exclude temp content but keep directory structure)
+temp/*
+!temp/.gitkeep
+tmp
+*.tmp
+
+# Data files (exclude runtime data but keep directory structure)
+data/jobs/*
+data/uploads/*
+!data/jobs/.gitkeep
+
+# Documentation
+*.md
+!DOCKER_README.md
+docs
+
+# Test files
+tests
+*.test.py
+test_*.py
+
+# Docker files
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Node modules (if any)
+node_modules
+package-lock.json
+
+# NOTE: Model files (*.pth, *.pth.tar, *.pt) are now INCLUDED in the image
+# Place your model files in the project directory before building:
+# - trufor.pth.tar (root directory)
+# - vendors/DeepfakeBench/training/weights/*.pth

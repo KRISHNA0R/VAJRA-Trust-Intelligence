@@ -1,0 +1,5 @@
+This is not a real video file. It's corrupted data for testing purposes.
+This file has an .mp4 extension but contains plain text instead of video data.
+Used for testing BUG-009 in video detection (DeepfakeBench).
+Test date: November 4, 2025
+

@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+actor Investigator as Inv
+actor "Forensic Analyst" as Tech
+actor Admin
+rectangle "Deepfake Detector" {
+  (Authenticate) as UC1
+  (Upload Media) as UC2
+  (Track Job Status) as UC3
+  (View Results) as UC4
+  (Explore Timeline) as UC5
+  (Add Annotations) as UC6
+  (Generate Report) as UC7
+  (Export Audit Bundle) as UC8
+  (Configure Thresholds/Models) as UC9
+  (Re-run / Compare Runs) as UC10
+  (Batch Processing) as UC11
+  (User & Role Management) as UC12
+  (Storage/Retention Config) as UC13
+  (View Logs/Health) as UC14
+
+  Inv --> UC1
+  Inv --> UC2
+  Inv --> UC3
+  Inv --> UC4
+  Inv --> UC5
+  Inv --> UC6
+  Inv --> UC7
+  Inv --> UC8
+
+  Tech --> UC9
+  Tech --> UC10
+  Tech --> UC11
+
+  Admin --> UC12
+  Admin --> UC13
+  Admin --> UC14
+}
+
+' include/extend relations
+(Analyze Media) as UC_Analyze
+UC_Analyze -down- UC4
+UC_Analyze ..> UC5 : <<includes>>
+UC_Analyze ..> UC2 : <<includes>>
+UC_Analyze ..> UC3 : <<includes>>
+UC7 ..> UC4 : <<includes>>  ' report includes viewing results
+@enduml

@@ -1,0 +1,43 @@
+# VAJRA Trust Intelligence - System Configuration
+# Verification & AI-based Judgement for Risk Assessment
+
+# Model Configuration
+models:
+  trufor:
+    enabled: true
+    path: "models/trufor.pth.tar"
+    confidence_threshold: 0.5
+    portrait_detection: true
+  
+  resnet50:
+    enabled: true
+    path: "deepfake_resnet50.pth"
+    confidence_threshold: 0.5
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  debug: false
+  reload: false
+
+# File Upload Configuration
+upload:
+  max_file_size_mb: 10
+  allowed_extensions: [".jpg", ".jpeg", ".png", ".webp"]
+  temp_dir: "temp"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/app.log"
+
+# UI Configuration
+ui:
+  theme: "light"
+  animations: true
+  progress_bar: true
+  hover_tooltips: true
+
+

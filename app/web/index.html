@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VAJRA Trust Intelligence</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Base styles for consistency */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-bottom: env(safe-area-inset-bottom);
+            /* Force scrollbar to prevent layout shift */
+            overflow-y: scroll;
+        }
+        
+        /* Match DeepfakeBench container padding */
+        .trufor-spacing {
+            padding-top: 8px !important;
+            padding-bottom: 32px !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+        }
+        
+        /* Ensure h1 has no top margin */
+        .trufor-spacing h1 {
+            margin-top: 0 !important;
+        }
+        
+        /* Navigation Drawer Styles */
+        .drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            backdrop-filter: blur(4px);
+        }
+        
+        .drawer-overlay.show {
+            display: block;
+        }
+        
+        .mobile-drawer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 280px;
+            max-width: 85%;
+            background: #ffffff;
+            z-index: 250;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .mobile-drawer.show {
+            display: block;
+            transform: translateX(0);
+        }
+        
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 24px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .drawer-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+        }
+        
+        .drawer-close {
+            background: #f3f4f6;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .drawer-close:hover {
+            background: #e5e7eb;
+        }
+        
+        .drawer-close:focus-visible {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+        
+        .drawer-nav {
+            padding: 16px 0;
+        }
+        
+        .drawer-nav a {
+            display: flex;
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 6px;
+            border-radius: 10px;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.2s;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .drawer-nav a:hover {
+            background: #f3f4f6;
+        }
+        
+        .drawer-nav a.active {
+            background: #1f2937;
+            color: #fff;
+        }
+        
+        body.drawer-open {
+            overflow: hidden;
+        }
+        
+        /* Navbar enhancements */
+        .navbar {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        #menuToggle:focus-visible {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+        }
+        
+        <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .progress-bar {
+            transition: width 0.3s ease-in-out;
+        }
+        
+        .timeline-chart {
+            position: relative;
+            height: 100px;
+            background: linear-gradient(to bottom, #f0f0f0 0%, #ffffff 100%);
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: visible; /* Allow time labels to show */
+            margin-bottom: 20px; /* Space for time labels */
+        }
+        
+        .timeline-segment {
+            position: absolute;
+            background: rgba(239, 68, 68, 0.6);
+            border: 1px solid rgb(220, 38, 38);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .timeline-segment:hover {
+            background: rgba(239, 68, 68, 0.8);
+            transform: translateY(-2px);
+        }
+        
+        .timeline-time-label {
+            position: absolute;
+            bottom: -20px;
+            font-size: 10px;
+            color: #666;
+            transform: translateX(-50%);
+        }
+        
+        .keyframe-card {
+            transition: transform 0.2s;
+        }
+        
+        .keyframe-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .heatmap-canvas {
+            border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .visualization-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-base-200">
+    <!-- Navigation Bar -->
+    <div class="navbar bg-base-100 shadow-lg" role="navigation" aria-label="Main navigation" style="padding-top: 8px;">
+        <div class="flex-1">
+            <a href="/web/index_main.html" class="btn btn-ghost normal-case text-xl" aria-label="VAJRA Trust Intelligence Home">🛡️ VAJRA Trust Intelligence</a>
+        </div>
+        <!-- Desktop menu -->
+        <div class="hidden lg:flex">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/web/index_main.html">🏠 Home</a></li>
+                <li><a href="/web/index.html" class="active" aria-current="page">🖼️ Images (TruFor)</a></li>
+                <li><a href="/web/deepfakebench.html">🎬 Video (DeepfakeBench)</a></li>
+                
+                <li id="nav-history-li" style="display: none;"><a href="/web/history.html" id="nav-history">📜 History</a></li>
+                <li id="nav-login-li" style="display: none;"><a href="/web/login.html" id="nav-login">Login</a></li>
+                <li id="nav-register-li" style="display: none;"><a href="/web/register.html" id="nav-register">Register</a></li>
+                <li id="nav-logout-li" style="display: none;"><a href="#" id="nav-logout">Logout</a></li>
+            </ul>
+        </div>
+        <!-- Mobile hamburger -->
+        <div class="lg:hidden">
+            <button 
+                id="menuToggle" 
+                class="btn btn-ghost" 
+                aria-label="Open navigation menu"
+                aria-expanded="false"
+                aria-controls="mobileDrawer"
+                style="font-size: 24px; color: #111827;">
+                ☰
+            </button>
+        </div>
+    </div>
+    
+    <!-- Mobile Drawer Overlay -->
+    <div id="drawerOverlay" class="drawer-overlay" aria-hidden="true"></div>
+    
+    <!-- Mobile Drawer -->
+    <aside id="mobileDrawer" class="mobile-drawer" role="dialog" aria-labelledby="drawerTitle" aria-modal="true">
+        <div class="drawer-header">
+            <h2 id="drawerTitle" class="drawer-title">Navigation</h2>
+            <button 
+                id="drawerCloseBtn" 
+                class="drawer-close" 
+                aria-label="Close navigation menu">
+                ×
+            </button>
+        </div>
+        <nav class="drawer-nav" aria-label="Mobile navigation">
+            <a href="/web/index_main.html" class="nav-link">
+                <span aria-hidden="true">🏠</span>
+                <span>Home</span>
+            </a>
+            <a href="/web/index.html" class="nav-link active" aria-current="page">
+                <span aria-hidden="true">🖼️</span>
+                <span>Images (TruFor)</span>
+            </a>
+            <a href="/web/deepfakebench.html" class="nav-link">
+                <span aria-hidden="true">🎬</span>
+                <span>Video (DeepfakeBench)</span>
+            </a>
+
+            <a href="/web/history.html" class="nav-link" id="nav-mobile-history" style="display: none;">
+                <span aria-hidden="true">📜</span>
+                <span>History</span>
+            </a>
+            <a href="/web/login.html" class="nav-link" id="nav-mobile-login" style="display: none;">
+                <span aria-hidden="true">→</span>
+                <span>Login</span>
+            </a>
+            <a href="/web/register.html" class="nav-link" id="nav-mobile-register" style="display: none;">
+                <span aria-hidden="true">✎</span>
+                <span>Register</span>
+            </a>
+            <a href="#" class="nav-link" id="nav-mobile-logout" style="display: none;">
+                <span aria-hidden="true">←</span>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </aside>
+    
+    <div class="container mx-auto max-w-6xl trufor-spacing" style="padding-top: 8px !important; padding-bottom: 32px !important; padding-left: 16px !important; padding-right: 16px !important;">
+        <!-- Title -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">🔍 TruFor Detection System</h1>
+            <p class="text-base-content/60">AI-powered image and video authenticity detection</p>
+        </div>
+        
+        <!-- Media Type Selector -->
+        <div class="flex justify-center mb-6">
+            <div class="btn-group">
+                <button id="btnImage" class="btn btn-primary" onclick="switchMode('image')">
+                    📷 Image Detection
+                </button>
+                <button id="btnVideo" class="btn" onclick="switchMode('video')">
+                    🎥 Video Analysis
+                </button>
+            </div>
+        </div>
+        
+        <!-- Image Detection Mode -->
+        <div id="imageMode" class="space-y-6">
+        <!-- Upload Card -->
+            <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                    <div id="imageUploadZone" 
+                         class="border-2 border-dashed border-base-300 rounded-lg p-8 md:p-12 text-center hover:border-primary transition-colors cursor-pointer"
+                         ondrop="handleImageDrop(event)" 
+                         ondragover="event.preventDefault()" 
+                         ondragenter="event.target.classList.add('border-primary')"
+                         ondragleave="event.target.classList.remove('border-primary')">
+                        
+                    <svg class="w-16 h-16 mx-auto mb-4 text-base-content opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    
+                        <p class="text-lg font-medium mb-2">Drag and drop image here</p>
+                    <p class="text-sm text-base-content/60 mb-4">or</p>
+                    
+                    <input type="file" 
+                               id="imageFileInput" 
+                               accept="image/*" 
+                               class="hidden" 
+                               onchange="handleImageSelect(event)">
+                        <button class="btn btn-primary" onclick="document.getElementById('imageFileInput').click()">
+                            Choose Image
+                        </button>
+                        
+                        <p class="text-xs text-base-content/40 mt-4">Supported: JPG, PNG (max 10MB)</p>
+                    </div>
+                    
+                    <!-- Image Analysis Progress -->
+                    <div id="imageProgress" class="mt-4 hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium">Analyzing image...</span>
+                            <span id="imageProgressPercent" class="text-sm">0%</span>
+                        </div>
+                        <progress id="imageProgressBar" class="progress progress-primary w-full" value="0" max="100"></progress>
+                </div>
+            </div>
+        </div>
+        
+            <!-- Image Results -->
+            <div id="imageResults" class="space-y-6 hidden">
+                <!-- Summary Card -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                        <h2 class="card-title mb-4">📊 Detection Results</h2>
+                        
+                        <!-- Verdict Banner -->
+                        <div class="alert mb-4" id="imageVerdict">
+                            <div class="flex-1">
+                                <span id="imageVerdictText" class="font-bold text-lg"></span>
+                                <p id="imageConfidence" class="text-sm mt-1"></p>
+                        </div>
+                    </div>
+                        
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div class="stat bg-base-200 rounded-lg p-4">
+                                <div class="stat-title text-xs">Authenticity</div>
+                                <div class="stat-value text-lg" id="imageScore">--</div>
+                                <div class="stat-desc text-xs">0 = fake, 1 = real</div>
+                </div>
+                            <div class="stat bg-base-200 rounded-lg p-4">
+                                <div class="stat-title text-xs">Confidence</div>
+                                <div class="stat-value text-lg" id="imageConf">--</div>
+                                <div class="stat-desc text-xs">prediction strength</div>
+                            </div>
+                            <div class="stat bg-base-200 rounded-lg p-4">
+                                <div class="stat-title text-xs">Integrity</div>
+                                <div class="stat-value text-lg" id="imageIntegrity">--</div>
+                                <div class="stat-desc text-xs">overall score</div>
+                            </div>
+                            <div class="stat bg-base-200 rounded-lg p-4">
+                                <div class="stat-title text-xs">Model</div>
+                                <div class="stat-value text-lg">TruFor</div>
+                                <div class="stat-desc text-xs">with Noiseprint++</div>
+                            </div>
+                        </div>
+            </div>
+        </div>
+        
+                <!-- Visualization Card -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">🎨 Visualization Analysis</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Original Image -->
+                            <div>
+                                <h3 class="font-semibold mb-2">Original Image</h3>
+                                <img id="imagePreview" class="w-full rounded-lg border" alt="Original">
+        </div>
+        
+                            <!-- Anomaly Heatmap -->
+                            <div>
+                                <h3 class="font-semibold mb-2">Anomaly Heatmap</h3>
+                                <canvas id="predictionCanvas" class="heatmap-canvas border rounded-lg w-full"></canvas>
+                                <div class="mt-2 flex gap-2">
+                                    <button id="toggleConfidenceBtn" class="btn btn-sm btn-outline" onclick="toggleConfidenceCorrection()" title="Toggle confidence correction">Confidence-corrected</button>
+                                    <button id="downloadPngBtn" class="btn btn-sm btn-ghost" onclick="downloadCanvas('predictionCanvas','anomaly-heatmap.png')" title="Save heatmap as PNG">Download PNG</button>
+                                </div>
+                                <p class="text-xs text-base-content/60 mt-1">Red = manipulated areas</p>
+            </div>
+            
+                            <!-- Confidence Map -->
+                            <div>
+                                <h3 class="font-semibold mb-2">Confidence Map</h3>
+                                <canvas id="confidenceCanvas" class="heatmap-canvas border rounded-lg w-full"></canvas>
+                                <p class="text-xs text-base-content/60 mt-1">Brighter = higher confidence</p>
+                </div>
+                
+                            <!-- Noiseprint++ Map -->
+                            <div id="noiseprintContainer" class="hidden">
+                                <h3 class="font-semibold mb-2">Noiseprint++ Analysis</h3>
+                                <canvas id="noiseprintCanvas" class="heatmap-canvas border rounded-lg w-full"></canvas>
+                                <p class="text-xs text-base-content/60 mt-1">Noise pattern analysis</p>
+                    </div>
+                </div>
+                
+                        <!-- Portrait Note -->
+                        <div id="portraitNote" class="alert alert-info mt-4 hidden">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span id="portraitNoteText"></span>
+                    </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button class="btn btn-ghost" onclick="resetImage()">Analyze Another</button>
+                    </div>
+                </div>
+            </div>
+            
+        <!-- Video Analysis Mode -->
+        <div id="videoMode" class="space-y-6 hidden">
+            <!-- Upload Card -->
+                <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <div id="videoUploadZone" 
+                         class="border-2 border-dashed border-base-300 rounded-lg p-8 md:p-12 text-center hover:border-primary transition-colors cursor-pointer"
+                         ondrop="handleVideoDrop(event)" 
+                         ondragover="event.preventDefault()" 
+                         ondragenter="event.target.classList.add('border-primary')"
+                         ondragleave="event.target.classList.remove('border-primary')">
+                        
+                        <svg class="w-16 h-16 mx-auto mb-4 text-base-content opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" 
+                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        
+                        <p class="text-lg font-medium mb-2">Drag and drop video here</p>
+                        <p class="text-sm text-base-content/60 mb-4">or</p>
+                        
+                        <input type="file" 
+                               id="videoFileInput" 
+                               accept="video/*" 
+                               class="hidden" 
+                               onchange="handleVideoSelect(event)">
+                        <button class="btn btn-primary" onclick="document.getElementById('videoFileInput').click()">
+                            Choose Video
+                        </button>
+                        
+                        <p class="text-xs text-base-content/40 mt-4">Supported: MP4, MOV (max 500MB)</p>
+                                </div>
+                                
+                    <!-- Video Analysis Progress -->
+                    <div id="videoProgress" class="mt-4 hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium" id="videoStage">Uploading video...</span>
+                            <span id="videoProgressPercent" class="text-sm">0%</span>
+                           </div>
+                        <progress id="videoProgressBar" class="progress progress-primary w-full" value="0" max="100"></progress>
+                        <p id="videoMessage" class="text-xs text-base-content/60 mt-1"></p>
+                            </div>
+                                    </div>
+                                </div>
+                                
+            <!-- Video Results -->
+            <div id="videoResults" class="space-y-6 hidden">
+                <!-- Summary Card -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">📊 Analysis Summary</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="stat bg-base-200 rounded-lg p-4">
+                                <div class="stat-title text-xs">Duration</div>
+                                <div class="stat-value text-lg" id="videoDuration">--</div>
+                                <div class="stat-desc text-xs">seconds</div>
+                                </div>
+                            <div class="stat bg-base-200 rounded-lg p-4">
+                                <div class="stat-title text-xs">Clips Analyzed</div>
+                                <div class="stat-value text-lg" id="videoClips">--</div>
+                                <div class="stat-desc text-xs">total frames</div>
+                                    </div>
+                            <div class="stat bg-base-200 rounded-lg p-4 tooltip tooltip-bottom" 
+                                 data-tip="85th percentile score - segments above this are marked suspicious">
+                                <div class="stat-title text-xs">Threshold</div>
+                                <div class="stat-value text-lg" id="videoThreshold">--</div>
+                                <div class="stat-desc text-xs">detection cutoff (85th percentile)</div>
+                                        </div>
+                            <div class="stat bg-base-200 rounded-lg p-4">
+                                <div class="stat-title text-xs">Suspicious</div>
+                                <div class="stat-value text-lg text-error" id="videoSegments">--</div>
+                                <div class="stat-desc text-xs">segments found</div>
+                                        </div>
+                                        </div>
+                                </div>
+                            </div>
+                            
+                <!-- Timeline Chart -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">⏱️ Detection Timeline</h2>
+                        
+                        <!-- Legend -->
+                        <div class="flex items-center gap-2 mb-3 text-xs">
+                            <div class="w-4 h-4 bg-red-500/60 border border-red-700 rounded flex-shrink-0"></div>
+                            <span class="text-base-content/70">= Suspicious Segments</span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="text-sm font-medium">Adjust Threshold: <span id="thresholdValue">50</span>%</label>
+                                <span class="text-xs text-base-content/60">Higher = fewer detections</span>
+                               </div>
+                            <input type="range" 
+                                   id="thresholdSlider" 
+                                   min="0" 
+                                   max="100" 
+                                   value="50"
+                                   class="range range-primary range-sm"
+                                   oninput="updateThreshold(this.value)">
+                                   </div>
+                        <div id="timelineChart" class="timeline-chart relative">
+                            <!-- Timeline segments will be drawn here -->
+                                   </div>
+                        <div class="flex justify-between text-xs text-base-content/60 mt-2">
+                            <span>0:00</span>
+                            <span id="timelineEnd">--:--</span>
+                    </div>
+                </div>
+            </div>
+            
+                <!-- Segments List -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">🚨 Suspicious Segments</h2>
+                        <div id="segmentsList" class="space-y-3">
+                            <!-- Segments will be listed here -->
+                               </div>
+                        <div id="noSegments" class="text-center py-8 text-base-content/60 hidden">
+                            <svg class="w-16 h-16 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p>No suspicious segments detected</p>
+                            <p class="text-sm">Try lowering the threshold to see more detections</p>
+                    </div>
+                </div>
+                </div>
+            
+                <!-- Keyframes -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">🖼️ Key Frames</h2>
+                        <div id="keyframesList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <!-- Keyframes will be displayed here -->
+                    </div>
+                </div>
+            </div>
+            
+                <div class="flex justify-end">
+                    <button class="btn btn-ghost" onclick="resetVideo()">Analyze Another Video</button>
+            </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let currentMode = 'image';
+        let currentJobId = null;
+        let timelineData = null;
+        let pollInterval = null;
+        
+        // Switch between image and video modes
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            if (mode === 'image') {
+                document.getElementById('btnImage').classList.add('btn-primary');
+                document.getElementById('btnVideo').classList.remove('btn-primary');
+                document.getElementById('imageMode').classList.remove('hidden');
+                document.getElementById('videoMode').classList.add('hidden');
+            } else {
+                document.getElementById('btnVideo').classList.add('btn-primary');
+                document.getElementById('btnImage').classList.remove('btn-primary');
+                document.getElementById('videoMode').classList.remove('hidden');
+                document.getElementById('imageMode').classList.add('hidden');
+            }
+        }
+        
+        // ============ IMAGE DETECTION ============
+        
+        function handleImageDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('border-primary');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                analyzeImage(file);
+            }
+        }
+        
+        function handleImageSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                analyzeImage(file);
+            }
+        }
+        
+        async function analyzeImage(file) {
+            // Show progress
+            document.getElementById('imageProgress').classList.remove('hidden');
+            document.getElementById('imageResults').classList.add('hidden');
+            
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                alert('You are not logged in. Redirecting to login page.');
+                window.location.href = '/web/login.html';
+                return; // Stop the analysis if not logged in
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                // Simulate progress
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    if (progress <= 90) {
+                        document.getElementById('imageProgressBar').value = progress;
+                        document.getElementById('imageProgressPercent').textContent = progress + '%';
+                    }
+                }, 200);
+                
+                const response = await fetch('/detect', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                clearInterval(progressInterval);
+                document.getElementById('imageProgressBar').value = 100;
+                document.getElementById('imageProgressPercent').textContent = '100%';
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // Token is invalid or expired
+                        alert('Your session has expired. Please log in again.');
+                        localStorage.removeItem('access_token'); // Clear invalid token
+                        localStorage.removeItem('user');
+                        window.location.href = '/web/login.html';
+                        throw new Error('Unauthorized'); // Stop further processing
+                    }
+                    else {
+                        throw new Error('Detection failed');
+                    }
+                    
+                }
+                
+                const result = await response.json();
+                displayImageResults(file, result);
+                
+            } catch (error) {
+                console.error('Image analysis error:', error);
+                // Note: Keep minimal user-facing error
+                if (error.message !== 'Unauthorized') {
+                    alert('Error analyzing image: ' + error.message);
+                    document.getElementById('imageProgress').classList.add('hidden');
+                }
+            }
+        }
+        
+        function displayImageResults(file, result) {
+            document.getElementById('imageProgress').classList.add('hidden');
+            document.getElementById('imageResults').classList.remove('hidden');
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('imagePreview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // Show results
+            // BUGFIX-009: Handle invalid/corrupted data that returns null/0 values
+            const hasValidData = result.confidence != null && !isNaN(result.confidence) && 
+                                  result.integrity != null && !isNaN(result.integrity) &&
+                                  (result.confidence > 0 || result.integrity > 0);
+            
+            const isFake = result.decision === 'fake' || result.is_fake;
+            const verdict = document.getElementById('imageVerdict');
+            
+            // Determine verdict: if no valid data, show inconclusive
+            if (!hasValidData) {
+                verdict.className = 'alert mb-4 alert-warning';
+                document.getElementById('imageVerdictText').textContent = '⚠️ Inconclusive';
+            } else {
+                verdict.className = 'alert mb-4 ' + (isFake ? 'alert-error' : 'alert-success');
+                document.getElementById('imageVerdictText').textContent = 
+                    isFake ? '⚠️ Likely Manipulated' : '✅ Likely Authentic';
+            }
+            
+            // BUGFIX-009: Handle NaN confidence values
+            const confidenceValue = (result.confidence != null && !isNaN(result.confidence)) 
+                ? (result.confidence * 100).toFixed(1) 
+                : '0.0';
+            document.getElementById('imageConfidence').textContent = 
+                `Confidence: ${confidenceValue}%`;
+            document.getElementById('imageScore').textContent = 
+                result.score ? result.score.toFixed(3) : '--';
+            document.getElementById('imageConf').textContent = 
+                `${confidenceValue}%`;
+            document.getElementById('imageIntegrity').textContent = 
+                result.integrity ? result.integrity.toFixed(3) : '--';
+            
+            // Draw heatmaps
+            if (result.prediction_map && result.image_size) {
+                // Cache for toggles
+                window.currentHeatmapData = result.prediction_map;
+                window.currentWeightedHeatmapData = result.weighted_prediction_map || null;
+                window.currentImageSize = result.image_size;
+                window.useConfidenceCorrected = false;
+                drawHeatmap(result.prediction_map, result.image_size, 'predictionCanvas', 'hot');
+                // Reset buttons state
+                const confBtn = document.getElementById('toggleConfidenceBtn');
+                if (confBtn) { confBtn.setAttribute('data-on','0'); confBtn.textContent = 'Confidence-corrected'; }
+                const ovBtn = document.getElementById('toggleOverlayBtn');
+                if (ovBtn) { ovBtn.setAttribute('data-on','0'); ovBtn.textContent = 'Overlay on Original'; }
+            }
+            
+            if (result.confidence_map && result.image_size) {
+                drawHeatmap(result.confidence_map, result.image_size, 'confidenceCanvas', 'gray');
+            }
+            
+            if (result.noiseprint_map && result.image_size) {
+                document.getElementById('noiseprintContainer').classList.remove('hidden');
+                drawHeatmap(result.noiseprint_map, result.image_size, 'noiseprintCanvas', 'viridis');
+            }
+            
+            // Show portrait note if available
+            if (result.portrait_note && result.portrait_note.trim()) {
+                document.getElementById('portraitNote').classList.remove('hidden');
+                document.getElementById('portraitNoteText').textContent = result.portrait_note;
+            }
+        }
+        
+        function drawHeatmap(data, size, canvasId, colormap) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            const [height, width] = size;
+            
+            // BUGFIX-007: Limit canvas size to prevent browser crash with large images
+            const maxSize = 300;
+            const maxCanvasPixels = 300 * 300; // Maximum 90K pixels
+            let canvasWidth, canvasHeight;
+            
+            // Calculate scaled dimensions while preserving aspect ratio
+            if (width > height) {
+                // Landscape
+                canvasWidth = Math.min(maxSize, Math.sqrt(maxCanvasPixels * (width / height)));
+                canvasHeight = Math.round(canvasWidth * (height / width));
+            } else {
+                // Portrait or square
+                canvasHeight = Math.min(maxSize, Math.sqrt(maxCanvasPixels * (height / width)));
+                canvasWidth = Math.round(canvasHeight * (width / height));
+            }
+            
+            // Ensure dimensions are at least 1px
+            canvasWidth = Math.max(1, Math.floor(canvasWidth));
+            canvasHeight = Math.max(1, Math.floor(canvasHeight));
+            
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            
+            const imageData = ctx.createImageData(canvasWidth, canvasHeight);
+            
+            // Downsample data if necessary
+            const scaleX = width / canvasWidth;
+            const scaleY = height / canvasHeight;
+            
+            for (let y = 0; y < canvasHeight; y++) {
+                for (let x = 0; x < canvasWidth; x++) {
+                    // Map canvas coordinates back to original data coordinates
+                    const srcX = Math.min(Math.floor(x * scaleX), width - 1);
+                    const srcY = Math.min(Math.floor(y * scaleY), height - 1);
+                    
+                    const value = data[srcY][srcX];
+                    const idx = (y * canvasWidth + x) * 4;
+                    
+                    let r, g, b;
+                    if (colormap === 'hot') {
+                        // Red-yellow colormap for anomalies
+                        r = Math.floor(255 * value);
+                        g = Math.floor(255 * Math.max(0, value - 0.5) * 2);
+                        b = 0;
+                    } else if (colormap === 'gray') {
+                        // Grayscale
+                        r = g = b = Math.floor(255 * value);
+                } else {
+                        // Viridis-like colormap
+                        r = Math.floor(255 * (0.267 + 0.004 * value));
+                        g = Math.floor(255 * (0.005 + 0.556 * value));
+                        b = Math.floor(255 * (0.329 + 0.458 * value));
+                    }
+                    
+                    imageData.data[idx] = r;
+                    imageData.data[idx + 1] = g;
+                    imageData.data[idx + 2] = b;
+                    imageData.data[idx + 3] = 255;
+                }
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // Removed overlay feature per latest UI requirements
+
+        // Toggle confidence correction (use weighted anomaly map)
+        function toggleConfidenceCorrection() {
+            const btn = document.getElementById('toggleConfidenceBtn');
+            const on = btn.getAttribute('data-on') === '1';
+            if (!on) {
+                // Turn ON: use weighted map if available
+                if (window.currentWeightedHeatmapData && window.currentImageSize) {
+                    window.useConfidenceCorrected = true;
+                    drawHeatmap(window.currentWeightedHeatmapData, window.currentImageSize, 'predictionCanvas', 'hot');
+                    btn.textContent = 'Raw anomaly map';
+                    btn.setAttribute('data-on', '1');
+                    // Reset overlay state when switching source
+                    const ovBtn = document.getElementById('toggleOverlayBtn');
+                    if (ovBtn) { ovBtn.setAttribute('data-on','0'); ovBtn.textContent = 'Overlay on Original'; }
+                } else {
+                    // Note: Keep user-facing alert for unavailable feature
+                    alert('Confidence-corrected map is unavailable for this image.');
+                }
+            } else {
+                // Turn OFF: use raw anomaly map
+                if (window.currentHeatmapData && window.currentImageSize) {
+                    window.useConfidenceCorrected = false;
+                    drawHeatmap(window.currentHeatmapData, window.currentImageSize, 'predictionCanvas', 'hot');
+                    btn.textContent = 'Confidence-corrected';
+                    btn.setAttribute('data-on', '0');
+                    const ovBtn = document.getElementById('toggleOverlayBtn');
+                    if (ovBtn) { ovBtn.setAttribute('data-on','0'); ovBtn.textContent = 'Overlay on Original'; }
+                }
+            }
+        }
+
+        // Download any canvas as PNG
+        function downloadCanvas(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function resetImage() {
+            document.getElementById('imageResults').classList.add('hidden');
+            document.getElementById('imageFileInput').value = '';
+            document.getElementById('noiseprintContainer').classList.add('hidden');
+            document.getElementById('portraitNote').classList.add('hidden');
+        }
+        
+        // ============ VIDEO ANALYSIS ============
+        
+        function handleVideoDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('border-primary');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('video/')) {
+                analyzeVideo(file);
+            }
+        }
+        
+        function handleVideoSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                analyzeVideo(file);
+            }
+        }
+        
+        async function analyzeVideo(file) {
+            // Check file size (500MB limit)
+            const maxSize = 500 * 1024 * 1024; // 500MB
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            
+            if (file.size > maxSize) {
+                // Note: Keep file size alert for UX clarity
+                alert(`File too large!\nFile size: ${fileSizeMB}MB\nMaximum size: 500MB`);
+                return;
+            }
+            
+                
+            
+            // Show progress
+            document.getElementById('videoProgress').classList.remove('hidden');
+            document.getElementById('videoResults').classList.add('hidden');
+            document.getElementById('videoStage').textContent = 'Uploading video...';
+            document.getElementById('videoProgressBar').value = 0;
+            document.getElementById('videoProgressPercent').textContent = '0%';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/video/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Upload failed' }));
+                    throw new Error(errorData.detail || 'Upload failed');
+                }
+                
+                const result = await response.json();
+                currentJobId = result.job_id;
+                
+                
+                
+                // Start polling for progress
+                pollJobStatus();
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                // Note: Keep minimal user-facing error
+                alert('Error uploading video: ' + error.message);
+                // Reset progress
+                document.getElementById('videoProgressBar').value = 0;
+                document.getElementById('videoProgressPercent').textContent = '0%';
+                document.getElementById('videoProgress').classList.add('hidden');
+            }
+        }
+        
+        async function pollJobStatus() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+            
+            pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/video/jobs/${currentJobId}/status`);
+                    const status = await response.json();
+                    
+                    updateVideoProgress(status);
+                    
+                    if (status.status === 'completed') {
+                        clearInterval(pollInterval);
+                        await loadVideoResults();
+                    } else if (status.status === 'error') {
+                        clearInterval(pollInterval);
+                        // Note: Keep minimal user-facing error
+                        alert('Analysis failed: ' + status.message);
+                        document.getElementById('videoProgress').classList.add('hidden');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error polling status:', error);
+                }
+            }, 1000);
+        }
+        
+        function updateVideoProgress(status) {
+            const progress = status.progress || 0;
+            document.getElementById('videoProgressBar').value = progress;
+            document.getElementById('videoProgressPercent').textContent = progress + '%';
+            document.getElementById('videoStage').textContent = status.stage || 'Processing...';
+            document.getElementById('videoMessage').textContent = status.message || '';
+        }
+        
+        async function loadVideoResults() {
+            try {
+                const response = await fetch(`/video/jobs/${currentJobId}/result`);
+                const result = await response.json();
+                
+                timelineData = result;
+                displayVideoResults(result);
+                
+            } catch (error) {
+                // Note: Keep minimal user-facing error
+                alert('Error loading results: ' + error.message);
+            }
+        }
+        
+        function displayVideoResults(data) {
+            document.getElementById('videoProgress').classList.add('hidden');
+            document.getElementById('videoResults').classList.remove('hidden');
+            
+            // Update summary stats
+            document.getElementById('videoDuration').textContent = data.video_duration.toFixed(1);
+            document.getElementById('videoClips').textContent = data.total_clips;
+            document.getElementById('videoThreshold').textContent = data.threshold.toFixed(3);
+            document.getElementById('videoSegments').textContent = data.segments.length;
+            
+            // Update timeline end time
+            const minutes = Math.floor(data.video_duration / 60);
+            const seconds = Math.floor(data.video_duration % 60);
+            document.getElementById('timelineEnd').textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Reset threshold slider to 0% (show all segments)
+            const slider = document.getElementById('thresholdSlider');
+            slider.value = 0;
+            document.getElementById('thresholdValue').textContent = '0';
+            
+            // Draw timeline
+            drawTimeline(data);
+            
+            // Display segments
+            displaySegments(data.segments);
+            
+            // Display keyframes
+            displayKeyframes(data.segments);
+        }
+        
+        function drawTimeline(data) {
+            const chart = document.getElementById('timelineChart');
+            chart.innerHTML = '';
+            
+            const duration = data.video_duration;
+            const segments = data.segments;
+            
+            segments.forEach((seg, index) => {
+                const startPercent = (seg.start_time / duration) * 100;
+                const widthPercent = ((seg.end_time - seg.start_time) / duration) * 100;
+                
+                const segDiv = document.createElement('div');
+                segDiv.className = 'timeline-segment';
+                segDiv.style.left = startPercent + '%';
+                segDiv.style.width = Math.max(widthPercent, 0.8) + '%'; // Minimum 0.8% for visibility
+                segDiv.style.height = '70%'; // Reduced to 70% to prevent overflow
+                segDiv.style.top = '15%'; // Center vertically (15% + 70% = 85%, leaving 15% space)
+                segDiv.title = `Segment ${seg.segment_id}: ${formatTime(seg.start_time)} - ${formatTime(seg.end_time)} (score: ${seg.peak_score.toFixed(3)})`;
+                
+                // Add time label
+                const label = document.createElement('div');
+                label.className = 'timeline-time-label';
+                label.style.left = (startPercent + widthPercent / 2) + '%';
+                const mins = Math.floor(seg.peak_time / 60);
+                const secs = Math.floor(seg.peak_time % 60);
+                label.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                segDiv.appendChild(label);
+                chart.appendChild(segDiv);
+            });
+        }
+        
+        function displaySegments(segments) {
+            const list = document.getElementById('segmentsList');
+            const noSegments = document.getElementById('noSegments');
+            
+            list.innerHTML = '';
+            
+            if (segments.length === 0) {
+                list.classList.add('hidden');
+                noSegments.classList.remove('hidden');
+                return;
+            }
+            
+            list.classList.remove('hidden');
+            noSegments.classList.add('hidden');
+            
+            segments.forEach(seg => {
+                const div = document.createElement('div');
+                div.className = 'alert alert-error shadow-sm';
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <div>
+                            <h3 class="font-bold">Segment ${seg.segment_id}</h3>
+                            <div class="text-sm">
+                                Time: ${formatTime(seg.start_time)} - ${formatTime(seg.end_time)} 
+                                (${seg.duration.toFixed(1)}s)
+                            </div>
+                            <div class="text-sm">
+                                Peak Score: ${seg.peak_score.toFixed(3)} at ${formatTime(seg.peak_time)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+        
+        function displayKeyframes(segments) {
+            const list = document.getElementById('keyframesList');
+            list.innerHTML = '';
+            
+            segments.forEach(seg => {
+                if (seg.keyframe_path) {
+                    const div = document.createElement('div');
+                    div.className = 'keyframe-card';
+                    div.innerHTML = `
+                        <div class="card bg-base-100 shadow">
+                            <figure class="px-2 pt-2">
+                                <img src="/video/jobs/${currentJobId}/${seg.keyframe_path}" 
+                                     alt="Segment ${seg.segment_id}" 
+                                     class="rounded-lg w-full h-32 object-cover">
+                            </figure>
+                            <div class="card-body p-3">
+                                <h3 class="card-title text-sm">Segment ${seg.segment_id}</h3>
+                                <p class="text-xs text-base-content/60">${formatTime(seg.peak_time)}</p>
+                                <p class="text-xs font-semibold text-error">Score: ${seg.peak_score.toFixed(3)}</p>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+        }
+        
+        function updateThreshold(value) {
+            
+            document.getElementById('thresholdValue').textContent = value;
+            
+            if (!timelineData) {
+                
+                return;
+            }
+            
+            
+            
+            // Get all segment scores (not all scores, just segments)
+            const segmentScores = timelineData.segments.map(s => s.peak_score);
+            segmentScores.sort((a, b) => a - b);
+            
+            // Calculate threshold from percentile
+            let threshold = 0;
+            if (value == 0) {
+                threshold = 0; // Show all segments
+            } else if (value == 100) {
+                threshold = Math.max(...segmentScores) + 0.001; // Show none
+            } else {
+                // Use segment scores for percentile calculation
+                const index = Math.floor(segmentScores.length * value / 100);
+                threshold = segmentScores[index] || 0;
+            }
+            
+            
+            
+            // Filter segments by threshold
+            const filteredSegments = timelineData.segments.filter(s => s.peak_score >= threshold);
+            
+            
+            
+            // Update display
+            document.getElementById('videoSegments').textContent = filteredSegments.length;
+            displaySegments(filteredSegments);
+            displayKeyframes(filteredSegments);
+            
+            // Redraw timeline
+            const filteredData = { ...timelineData, segments: filteredSegments };
+            drawTimeline(filteredData);
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function resetVideo() {
+            document.getElementById('videoResults').classList.add('hidden');
+            document.getElementById('videoFileInput').value = '';
+            currentJobId = null;
+            timelineData = null;
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+        }
+    // ========== Navigation Drawer Logic (same as DeepfakeBench) ==========
+    (function() {
+        const menuBtn = document.getElementById('menuToggle');
+        const drawer = document.getElementById('mobileDrawer');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        const drawerCloseBtn = document.getElementById('drawerCloseBtn');
+        const body = document.body;
+        
+        if (!menuBtn || !drawer || !drawerOverlay || !drawerCloseBtn) return;
+        
+        let focusableElements = [];
+        let firstFocusable = null;
+        let lastFocusable = null;
+        
+        function openDrawer() {
+            drawer.classList.add('show');
+            drawerOverlay.classList.add('show');
+            body.classList.add('drawer-open');
+            menuBtn.setAttribute('aria-expanded', 'true');
+            drawer.setAttribute('aria-hidden', 'false');
+            drawerOverlay.setAttribute('aria-hidden', 'false');
+            
+            // Set up focus trap
+            focusableElements = drawer.querySelectorAll(
+                'a[href], button:not([disabled]), input:not([disabled])'
+            );
+            firstFocusable = focusableElements[0];
+            lastFocusable = focusableElements[focusableElements.length - 1];
+            
+            // Focus close button
+            setTimeout(() => drawerCloseBtn.focus(), 100);
+            
+            // Add keyboard listener
+            document.addEventListener('keydown', handleDrawerKeydown);
+        }
+        
+        function closeDrawer() {
+            drawer.classList.remove('show');
+            drawerOverlay.classList.remove('show');
+            body.classList.remove('drawer-open');
+            menuBtn.setAttribute('aria-expanded', 'false');
+            drawer.setAttribute('aria-hidden', 'true');
+            drawerOverlay.setAttribute('aria-hidden', 'true');
+            
+            // Return focus to menu button
+            menuBtn.focus();
+            
+            // Remove keyboard listener
+            document.removeEventListener('keydown', handleDrawerKeydown);
+        }
+        
+        function handleDrawerKeydown(e) {
+            // Close on Escape
+            if (e.key === 'Escape') {
+                closeDrawer();
+                return;
+            }
+            
+            // Focus trap with Tab
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === firstFocusable) {
+                        e.preventDefault();
+                        lastFocusable.focus();
+                    }
+                } else {
+                    if (document.activeElement === lastFocusable) {
+                        e.preventDefault();
+                        firstFocusable.focus();
+                    }
+                }
+            }
+        }
+        
+        // Event listeners
+        menuBtn.addEventListener('click', openDrawer);
+        drawerCloseBtn.addEventListener('click', closeDrawer);
+        drawerOverlay.addEventListener('click', closeDrawer);
+        
+        // Close drawer when clicking a link (navigation)
+        drawer.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeDrawer);
+        });
+    })();
+
+    // Navigation bar authentication state management
+    (function() {
+        const token = localStorage.getItem('access_token');
+        
+        // Desktop nav elements
+        const historyLi = document.getElementById('nav-history-li');
+        const loginLi = document.getElementById('nav-login-li');
+        const registerLi = document.getElementById('nav-register-li');
+        const logoutLi = document.getElementById('nav-logout-li');
+        const logoutBtn = document.getElementById('nav-logout');
+        
+        // Mobile nav elements
+        const mobileHistoryLink = document.getElementById('nav-mobile-history');
+        const mobileLoginLink = document.getElementById('nav-mobile-login');
+        const mobileRegisterLink = document.getElementById('nav-mobile-register');
+        const mobileLogoutLink = document.getElementById('nav-mobile-logout');
+
+        if (token) {
+            // User is logged in - show History and Logout
+            if (historyLi) historyLi.style.display = 'block';
+            if (logoutLi) logoutLi.style.display = 'block';
+            if (loginLi) loginLi.style.display = 'none';
+            if (registerLi) registerLi.style.display = 'none';
+
+            if (mobileHistoryLink) mobileHistoryLink.style.display = 'flex';
+            if (mobileLogoutLink) mobileLogoutLink.style.display = 'flex';
+            if (mobileLoginLink) mobileLoginLink.style.display = 'none';
+            if (mobileRegisterLink) mobileRegisterLink.style.display = 'none';
+
+            // Logout handler
+            const handleLogout = async (e) => {
+                e.preventDefault();
+                
+                try {
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                } catch (error) {
+                    console.error('Logout API call failed:', error);
+                }
+
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('user');
+                window.location.href = '/web/login.html';
+            };
+
+            // Bind logout events
+            if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+            if (mobileLogoutLink) mobileLogoutLink.addEventListener('click', handleLogout);
+
+        } else {
+            // User is not logged in - show Login and Register
+            if (historyLi) historyLi.style.display = 'none';
+            if (logoutLi) logoutLi.style.display = 'none';
+            if (loginLi) loginLi.style.display = 'block';
+            if (registerLi) registerLi.style.display = 'block';
+
+            if (mobileHistoryLink) mobileHistoryLink.style.display = 'none';
+            if (mobileLogoutLink) mobileLogoutLink.style.display = 'none';
+            if (mobileLoginLink) mobileLoginLink.style.display = 'flex';
+            if (mobileRegisterLink) mobileRegisterLink.style.display = 'flex';
+        }
+    })();
+    </script>
+    
+    <!-- Override Tailwind padding - must be after Tailwind loads -->
+    <style>
+        .trufor-spacing {
+            padding-top: 8px !important;
+            padding-bottom: 32px !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+        }
+        
+        .trufor-spacing h1 {
+            margin-top: 0 !important;
+        }
+    </style>
+</body>
+</html>
+

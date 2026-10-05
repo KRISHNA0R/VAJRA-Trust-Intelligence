@@ -1,0 +1,3 @@
+[submodule "vendors/DeepfakeBench"]
+	path = vendors/DeepfakeBench
+	url = https://github.com/SCLBD/DeepfakeBench
