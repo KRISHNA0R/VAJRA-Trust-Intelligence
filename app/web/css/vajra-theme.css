@@ -82,3 +82,42 @@ html body {
 .upload-area {
   background-color: #FFF9F1 !important;
 }
+
+/* ==========================================================================
+   Readability fixes: several pages were designed with white text for a dark
+   background. On the light-orange theme that text is invisible, so force
+   near-black text here. Colored badge backgrounds are left untouched.
+   ========================================================================== */
+
+/* Home + section heroes and footers */
+.header,
+.header h1,
+.header .subtitle,
+footer,
+footer p,
+footer .tip {
+  color: #1a1a1a !important;
+}
+.header h1 {
+  text-shadow: none !important;
+}
+
+/* History page (translucent-white panels, white text throughout) */
+.nav-brand,
+.nav-link:not(.active),
+.user-info,
+.stat-card,
+.stat-value,
+.stat-label,
+.panel-title,
+.filter-btn,
+.history-table th,
+.history-table td,
+.action-btn,
+.empty-state,
+.empty-state h3,
+.empty-state p,
+.history-card,
+.card-row {
+  color: #1a1a1a !important;
+}
