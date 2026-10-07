@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -161,6 +161,7 @@
             to { transform: rotate(360deg); }
         }
     </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
     <link rel="stylesheet" href="/web/css/vajra-theme.css">
 </head>
 <body>
@@ -169,6 +170,8 @@
             <h1>VAJRA Trust Intelligence</h1>
             <p>Verification &amp; AI-based Judgement for Risk Assessment — Secure Login</p>
         </div>
+
+        <div class="slogan-box" aria-live="polite">“<span id="slogan">Trust, but verify — every pixel, every frame, every voice.</span>”</div>
 
         <div class="info-message">
             <strong>Default Admin Account:</strong><br>
@@ -209,17 +212,44 @@
         </form>
 
         <div style="text-align: center; margin-top: 20px;">
-            <a href="/web/register.html" style="color: rgba(255, 255, 255, 0.9); text-decoration: none; font-size: 14px; transition: color 0.3s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255, 255, 255, 0.9)'">
+            <a href="/web/register.html" style="color: #1a1a1a; text-decoration: underline; font-size: 14px;">
                 Don't have an account? <strong>Register here</strong>
             </a>
         </div>
 
         <div class="footer-text">
-            Powered by TruFor & DeepfakeBench
+            Powered by TruFor, DeepfakeBench &amp; Dhwani<br>
+            <span style="font-size: 12px;">🔒 Runs fully on-premise — your media never leaves this machine.</span>
         </div>
     </div>
 
     <script>
+        // Rotating cybersecurity slogans inside the login box
+        (function() {
+            const slogans = [
+                "Trust, but verify — every pixel, every frame, every voice.",
+                "Deepfakes fool eyes. VAJRA checks the evidence.",
+                "See the unseen. Hear the unheard.",
+                "Your last line of defence against synthetic media.",
+                "Real or fake? Get forensic proof in seconds.",
+                "Don't trust the clip. Verify it.",
+                "AI-generated lies meet AI-powered truth.",
+                "For analysts who can't afford to be fooled."
+            ];
+            let i = 0;
+            const box = document.querySelector('.slogan-box');
+            const el = document.getElementById('slogan');
+            if (!box || !el) return;
+            setInterval(() => {
+                box.classList.add('fading');
+                setTimeout(() => {
+                    i = (i + 1) % slogans.length;
+                    el.textContent = slogans[i];
+                    box.classList.remove('fading');
+                }, 400);
+            }, 4000);
+        })();
+
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
         const errorMessage = document.getElementById('errorMessage');

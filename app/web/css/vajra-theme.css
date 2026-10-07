@@ -121,3 +121,85 @@ footer .tip {
 .card-row {
   color: #1a1a1a !important;
 }
+
+/* ==========================================================================
+   Login / Register: glass cards were built for a dark background.
+   Black text for readability; buttons follow the orange theme.
+   ========================================================================== */
+.logo h1,
+.logo p,
+.login-container label,
+.footer-text,
+.footer-text a {
+  color: #1a1a1a !important;
+}
+.footer-text a {
+  text-decoration: underline;
+}
+.login-container input[type="text"],
+.login-container input[type="password"] {
+  color: #1a1a1a !important;
+  background: rgba(255, 255, 255, 0.55) !important;
+}
+.login-container input::placeholder {
+  color: rgba(67, 20, 7, 0.5) !important;
+}
+.btn-login {
+  background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
+  color: #FFF7ED !important;
+  border: 1px solid #9A3412 !important;
+}
+
+/* Rotating slogan box (login page) */
+.slogan-box {
+  text-align: center;
+  font-style: italic;
+  color: #9A3412 !important;
+  font-size: 14px;
+  min-height: 42px;
+  margin: 4px 0 18px;
+  padding: 10px 14px;
+  background: rgba(255, 237, 213, 0.6) !important;
+  border-radius: 10px;
+  transition: opacity 0.4s ease;
+}
+.slogan-box.fading {
+  opacity: 0;
+}
+
+/* ==========================================================================
+   Home page professional touches: eyebrow badge, trust strip, fine print.
+   ========================================================================== */
+.eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #FFF7ED !important;
+  background: linear-gradient(135deg, #EA580C 0%, #9A3412 100%) !important;
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin-bottom: 14px;
+}
+.trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  justify-content: center;
+  margin: 26px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #7C2D12 !important;
+}
+.trust-strip span {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+footer .fineprint {
+  font-size: 12px;
+  opacity: 0.75;
+  max-width: 720px;
+  margin: 8px auto 0;
+}
