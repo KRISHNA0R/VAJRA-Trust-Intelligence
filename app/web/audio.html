@@ -89,6 +89,8 @@
             <p>Spoof (fake) probability: <b id="fakeProb"></b></p>
             <div class="bar"><div id="fakeBar" style="width:0%"></div></div>
             <p style="margin-top:8px;">Duration: <b id="duration"></b> &bull; Confidence: <b id="confidence"></b> &bull; Job: <code id="jobId"></code></p>
+            <p>Financial risk: <b id="audioRisk"></b></p>
+            <ol id="audioActions" style="margin-left: 20px; font-size: 14px;"></ol>
             <h3 style="font-weight:700; margin-top:12px;">Per-window scores</h3>
             <table class="chunks"><thead><tr><th>#</th><th>Start (s)</th><th>End (s)</th><th>Fake prob</th></tr></thead><tbody id="chunkRows"></tbody></table>
             <p style="margin-top:12px;">
@@ -151,6 +153,9 @@
                 document.getElementById('duration').textContent = r.duration_sec + 's';
                 document.getElementById('confidence').textContent = (r.confidence*100).toFixed(1) + '%';
                 document.getElementById('jobId').textContent = r.job_id;
+                document.getElementById('audioRisk').textContent = r.risk_level || '—';
+                document.getElementById('audioActions').innerHTML =
+                    (r.recommended_actions || []).map(a => `<li>${a}</li>`).join('');
                 document.getElementById('chunkRows').innerHTML = (r.chunks||[]).map(c =>
                     `<tr><td>${c.chunk+1}</td><td>${c.start}</td><td>${c.end}</td><td>${(c.fake_prob*100).toFixed(1)}%</td></tr>`).join('');
                 document.getElementById('pdfLink').href = `/api/reports/${r.job_id}/pdf`;

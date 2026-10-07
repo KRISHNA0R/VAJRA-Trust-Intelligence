@@ -399,6 +399,15 @@
                         </div>
             </div>
         </div>
+
+                <!-- Risk & Response Card -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">🛡️ Financial Risk &amp; Recommended Actions</h2>
+                        <p>Risk level: <span id="imageRisk" class="badge badge-lg"></span></p>
+                        <ol id="imageActions" class="list-decimal ml-6 mt-2 space-y-1 text-sm"></ol>
+                    </div>
+                </div>
         
                 <!-- Visualization Card -->
                 <div class="card bg-base-100 shadow-xl">
@@ -747,8 +756,21 @@
                 result.score ? result.score.toFixed(3) : '--';
             document.getElementById('imageConf').textContent = 
                 `${confidenceValue}%`;
-            document.getElementById('imageIntegrity').textContent = 
+            document.getElementById('imageIntegrity').textContent =
                 result.integrity ? result.integrity.toFixed(3) : '--';
+
+            // Financial risk level + response playbook (from API)
+            const riskBadge = document.getElementById('imageRisk');
+            if (riskBadge && result.risk_level) {
+                const lvl = result.risk_level;
+                riskBadge.textContent = lvl;
+                riskBadge.className = 'badge badge-lg ' + (
+                    lvl === 'CRITICAL' ? 'badge-error' :
+                    lvl === 'HIGH' ? 'badge-warning' :
+                    lvl === 'LOW' ? 'badge-success' : 'badge-info');
+                document.getElementById('imageActions').innerHTML =
+                    (result.recommended_actions || []).map(a => `<li>${a}</li>`).join('');
+            }
             
             // Draw heatmaps
             if (result.prediction_map && result.image_size) {

@@ -211,6 +211,35 @@
             border: 1px solid rgba(34, 197, 94, 0.5);
         }
 
+        .risk-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-block;
+            letter-spacing: 0.03em;
+        }
+
+        .risk-CRITICAL {
+            background: rgba(220, 38, 38, 0.35);
+            border: 1px solid rgba(220, 38, 38, 0.7);
+        }
+
+        .risk-HIGH {
+            background: rgba(234, 88, 12, 0.3);
+            border: 1px solid rgba(234, 88, 12, 0.7);
+        }
+
+        .risk-MEDIUM {
+            background: rgba(202, 138, 4, 0.25);
+            border: 1px solid rgba(202, 138, 4, 0.6);
+        }
+
+        .risk-LOW {
+            background: rgba(34, 197, 94, 0.25);
+            border: 1px solid rgba(34, 197, 94, 0.6);
+        }
+
         .status-badge {
             padding: 4px 12px;
             border-radius: 12px;
@@ -605,6 +634,7 @@
                                     <th>Model</th>
                                     <th>Status</th>
                                     <th>Verdict</th>
+                                    <th>Risk</th>
                                     <th>Score</th>
                                     <th>Date</th>
                                     <th>Actions</th>
@@ -618,6 +648,7 @@
                                         <td>${job.model || '-'}</td>
                                         <td><span class="status-badge status-${job.status}">${job.status}</span></td>
                                         <td>${job.verdict ? `<span class="verdict-badge verdict-${job.verdict}">${job.verdict}</span>` : '-'}</td>
+                                        <td>${job.risk_level ? `<span class="risk-badge risk-${job.risk_level}">${job.risk_level}</span>` : '—'}</td>
                                         <td>${job.score ? (job.score * 100).toFixed(1) + '%' : '-'}</td>
                                         <td>${new Date(job.created_at).toLocaleString()}</td>
                                         <td>

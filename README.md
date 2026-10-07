@@ -31,6 +31,7 @@ are **not yet implemented** — see the readiness report's PS3 matrix.
 | Anomaly heatmap, confidence map, Noiseprint++ map | ✅ Working | PNGs saved per job in `data/jobs/<job_id>/` |
 | Video deepfake detection, 12 selectable models (DeepfakeBench) | ✅ Working | xception: 20 frames, verdict FAKE on synthetic clip, 15.6 s CPU |
 | Voice spoof detection, Hindi/English/multilingual (Dhwani) | ✅ Working | 4/4: real EN/HI → REAL, TTS EN/HI → FAKE (API + browser tested) |
+| Financial risk level + response playbook on every result | ✅ Working | CRITICAL/HIGH/MEDIUM/LOW + action checklist in UI, history, PDF |
 | Suspicious-segment detection + keyframes | ✅ Working | 1 segment found on test clip |
 | JWT auth (register/login, analyst/investigator/admin roles) | ✅ Working | register → login → Bearer token flow tested |
 | Detection history (per-user, admin sees all) | ✅ Working | `GET /api/history` returned test job |

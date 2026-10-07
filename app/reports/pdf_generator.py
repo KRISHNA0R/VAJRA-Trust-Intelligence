@@ -363,6 +363,24 @@ class PDFReportGenerator:
 
         story.append(Spacer(1, 0.3*inch))
 
+        # Financial Risk Assessment & Recommended Actions (all detection types)
+        try:
+            from app.utils.risk import assess as _assess_risk
+        except ImportError:
+            from utils.risk import assess as _assess_risk
+        _risk_level, _risk_actions = _assess_risk(
+            result.get("verdict", "unknown"),
+            result.get("fake_prob", result.get("score", 0.5)))
+        story.append(Paragraph("Financial Risk Assessment", self.styles['CustomSubtitle']))
+        risk_style = (self.styles['VerdictFake'] if _risk_level in ("CRITICAL", "HIGH")
+                      else self.styles['VerdictReal'])
+        story.append(Paragraph(f"<b>Risk Level:</b> {_risk_level}", risk_style))
+        story.append(Spacer(1, 0.1*inch))
+        story.append(Paragraph("<b>Recommended actions:</b>", self.styles['Normal']))
+        for _action in _risk_actions:
+            story.append(Paragraph(f"• {_action}", self.styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+
         # Timeline Data (for DeepfakeBench)
         timeline = self._load_json("timeline.json")
         if timeline:

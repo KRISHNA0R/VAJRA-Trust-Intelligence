@@ -1362,6 +1362,11 @@
             <div class="result" id="result" role="region" aria-label="Analysis results">
                 <h2>Analysis Results</h2>
                 <div class="verdict" id="verdict" role="status"></div>
+
+                <div class="risk-panel" id="videoRiskPanel" style="display:none; margin: 15px 0; padding: 15px; border-radius: 10px;">
+                    <h3 style="margin-bottom: 8px;">🛡️ Financial Risk: <span id="videoRiskLevel"></span></h3>
+                    <ol id="videoRiskActions" style="margin-left: 20px; font-size: 14px;"></ol>
+                </div>
                 
                 <div class="metrics">
                     <div class="metric">
@@ -2238,6 +2243,15 @@
             document.getElementById('averageScore').textContent = (result.average_score * 100).toFixed(1) + '%';
             document.getElementById('totalFrames').textContent = result.total_frames;
             document.getElementById('segmentCount').textContent = result.suspicious_segments.length;
+
+            // Financial risk + response playbook (from API)
+            if (result.risk_level) {
+                const panel = document.getElementById('videoRiskPanel');
+                panel.style.display = 'block';
+                document.getElementById('videoRiskLevel').textContent = result.risk_level;
+                document.getElementById('videoRiskActions').innerHTML =
+                    (result.recommended_actions || []).map(a => `<li>${a}</li>`).join('');
+            }
             
             // Show and render timeline
             document.getElementById('timelineSection').style.display = 'block';

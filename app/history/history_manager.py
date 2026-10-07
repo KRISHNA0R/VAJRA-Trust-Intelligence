@@ -163,7 +163,8 @@ class HistoryManager:
                 "completed_at": metadata.get("completed_at"),
                 "status": metadata["status"],
                 "verdict": metadata.get("result", {}).get("verdict") if metadata.get("result") else None,
-                "score": metadata.get("result", {}).get("score") if metadata.get("result") else None
+                "score": metadata.get("result", {}).get("score") if metadata.get("result") else None,
+                "risk_level": metadata.get("result", {}).get("risk_level") if metadata.get("result") else None
             }
 
             all_jobs.append(job_summary)

@@ -26,6 +26,7 @@ try:
     from history.history_manager import history_manager
     from reports.pdf_generator import generate_pdf_report
     from reports.zip_generator import generate_zip_report
+    from utils.risk import attach as attach_risk
 except ImportError:
     # Fallback to absolute imports (when run from project root)
     from app.adapters.trufor_adapter import TruForAdapter
@@ -36,6 +37,7 @@ except ImportError:
     from app.history.history_manager import history_manager
     from app.reports.pdf_generator import generate_pdf_report
     from app.reports.zip_generator import generate_zip_report
+    from app.utils.risk import attach as attach_risk
 
 import uvicorn
 
@@ -622,6 +624,11 @@ async def detect_deepfake(
                 import traceback
                 traceback.print_exc()
 
+        # Financial risk assessment (shared playbook)
+        attach_risk(result)  # adds risk_level + recommended_actions in place
+        risk_level = result["risk_level"]
+        risk_actions = result["recommended_actions"]
+
         # Create metadata for history
         history_manager.create_job_metadata(
             job_id=job_id,
@@ -642,6 +649,8 @@ async def detect_deepfake(
                 "score": result.get("score", 0),             # Authenticity score (0-1, 1=real)
                 "integrity": result.get("integrity", 0),     # Integrity score (TruFor specific)
                 "fake_prob": result.get("fake_prob", 0),     # Raw fake probability
+                "risk_level": risk_level,
+                "recommended_actions": risk_actions,
 
                 # Metadata about the analysis
                 "image_size": result.get("image_size", None), # Original (H, W)
@@ -1117,6 +1126,10 @@ def run_deepfakebench_analysis(job_id: str, video_path: str, model: str, fps: fl
             except Exception as e:
                 logger.warning(f"Failed to save timeline.json for job {job_id}: {e}")
 
+            # Financial risk assessment (shared playbook; fake_prob = overall score)
+            result["fake_prob"] = result.get("overall_score", 0)
+            attach_risk(result)
+
             jobs[job_id].update({
                 "status": "completed",
                 "progress": 100,
@@ -1135,6 +1148,9 @@ def run_deepfakebench_analysis(job_id: str, video_path: str, model: str, fps: fl
                     "score": result.get("overall_score", 0),          # Overall detection score
                     "average_score": result.get("average_score", 0),   # Average frame score
                     "confidence": result.get("confidence", 0),         # Confidence level
+                    "fake_prob": result.get("overall_score", 0),
+                    "risk_level": result.get("risk_level", "unknown"),
+                    "recommended_actions": result.get("recommended_actions", []),
 
                     # Model information
                     "model": result.get("model", model),
@@ -1401,6 +1417,7 @@ async def analyze_audio(
     with open(job_dir / "audio_scores.json", "w") as f:
         json.dump(result.get("chunks", []), f, indent=2)
 
+    attach_risk(result)  # financial risk + response playbook (before history)
     history_manager.update_job_status(
         job_id=job_id,
         status="completed",
@@ -1412,6 +1429,8 @@ async def analyze_audio(
             "duration_sec": result.get("duration_sec", 0),
             "num_chunks": result.get("num_chunks", 0),
             "model": result.get("model", "dhwani-spoof"),
+            "risk_level": result.get("risk_level", "unknown"),
+            "recommended_actions": result.get("recommended_actions", []),
         }
     )
 
