@@ -144,6 +144,11 @@ footer .tip {
 .login-container input::placeholder {
   color: rgba(67, 20, 7, 0.5) !important;
 }
+/* Info box: light-blue background needs dark text for contrast */
+.login-container .info-message,
+.login-container .info-message strong {
+  color: #1a1a1a !important;
+}
 .btn-login {
   background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
   color: #FFF7ED !important;
