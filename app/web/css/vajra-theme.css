@@ -208,3 +208,33 @@ footer .fineprint {
   max-width: 720px;
   margin: 8px auto 0;
 }
+
+/* ==========================================================================
+   Brand logo: white-background badge, dark-orange ring. Used in navbars,
+   heroes and login card.
+   ========================================================================== */
+img.brand-logo {
+  background: #FFFFFF !important;
+  border: 2px solid #C2410C !important;
+  border-radius: 16px !important;
+  object-fit: contain;
+}
+img.brand-logo-nav {
+  height: 30px;
+  width: auto;
+  border-radius: 8px !important;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+img.brand-logo-hero {
+  height: 92px;
+  width: auto;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 14px rgba(154, 52, 18, 0.25);
+}
+img.brand-logo-login {
+  height: 84px;
+  width: auto;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 14px rgba(154, 52, 18, 0.25);
+}

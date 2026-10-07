@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="app/web/img/logo.png" alt="VAJRA Trust Intelligence logo" width="180">
+
 # 🛡️ VAJRA Trust Intelligence
 
 [![Typing SVG](https://readme-typing-svg.herokuapp.com?font=JetBrains+Mono&size=22&duration=3000&pause=800&color=C2410C&center=true&vCenter=true&width=800&lines=Verification+%26+AI-based+Judgement+for+Risk+Assessment;Don't+trust+the+clip.+VERIFY+it.;Real+or+Fake%3F+Get+forensic+proof+in+seconds.)](https://github.com/KRISHNA0R/VAJRA-Trust-Intelligence)
