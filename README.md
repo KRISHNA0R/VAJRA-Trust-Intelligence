@@ -1,308 +1,195 @@
+<div align="center">
+
 # 🛡️ VAJRA Trust Intelligence
 
-**Verification & AI-based Judgement for Risk Assessment**
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=JetBrains+Mono&size=22&duration=3000&pause=800&color=C2410C&center=true&vCenter=true&width=800&lines=Verification+%26+AI-based+Judgement+for+Risk+Assessment;Don't+trust+the+clip.+VERIFY+it.;Real+or+Fake%3F+Get+forensic+proof+in+seconds.)](https://github.com/KRISHNA0R/VAJRA-Trust-Intelligence)
 
-A locally runnable deepfake-detection prototype for the **RAKSHAM AI Cybersecurity
-Hackathon PS3 — "Deepfake Detection for Financial Communications"**.
+[![Version](https://img.shields.io/badge/version-1.0-orange?style=for-the-badge&logo=shield&logoColor=white)](https://github.com/KRISHNA0R/VAJRA-Trust-Intelligence)
+[![PS3](https://img.shields.io/badge/RAKSHAM-PS3-deepfake_detection-red?style=for-the-badge)](https://github.com/KRISHNA0R/VAJRA-Trust-Intelligence)
+[![Python](https://img.shields.io/badge/python-3.14-blue?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Models](https://img.shields.io/badge/AI_models-TruFor_%2B_12_video_%2B_Dhwani-success?style=for-the-badge&logo=pytorch&logoColor=white)](https://github.com/KRISHNA0R/VAJRA-Trust-Intelligence)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](docs/handover/LICENSE)
+[![Team](https://img.shields.io/badge/team-HACKSTREET-9A3412?style=for-the-badge)](https://github.com/KRISHNA0R/VAJRA-Trust-Intelligence)
 
-> **Status (Oct 2026):** ✅ Verified working natively on Windows (CPU).
-> Backend + browser UI + real image/video inference + PDF/ZIP reporting all
-> smoke-tested. See [`VAJRA_SETUP_READINESS_REPORT.md`](VAJRA_SETUP_READINESS_REPORT.md)
-> for the full evidence log.
+### 🎯 Deepfake Detection for Financial Communications
+
+*Help people and institutions **verify** financial communications, **detect** manipulation, and get an **actionable path** for review, reporting, and response.*
+
+</div>
 
 ---
 
-## 1. Purpose
+## ⚡ What is VAJRA?
 
-VAJRA Trust Intelligence helps analysts verify whether an image or video shows
-signs of AI-based manipulation. Upload media in the browser, get a verdict
-(REAL/FAKE) with confidence scores, forensic heatmaps (images) or suspicious
-segments (video), and export a PDF/ZIP evidence package.
+Every day, fake images, doctored videos and **cloned voices** scam people and institutions —
+fake CEO voice notes, morphed payment screenshots, manipulated KYC videos.
+**VAJRA Trust Intelligence** is a locally-running forensic workstation that tells you,
+with evidence, whether a piece of media is **REAL or FAKE** — and exactly **what to do next**.
 
-This repository is the **prepared, renamed, runnable baseline**. PS3 financial-
-communication features (provenance, verification workflows, human review, …)
-are **not yet implemented** — see the readiness report's PS3 matrix.
+| | Capability | Engine | Status |
+|---|---|---|---|
+| 🖼️ | Image forgery detection + pixel-level localization + heatmaps | **TruFor** | ✅ Verified |
+| 🎬 | Video deepfake detection (12 models) + suspicious segments + keyframes | **DeepfakeBench** | ✅ Verified |
+| 🎙️ | Voice spoof detection — Hindi, English, Tamil, Telugu, Malayalam | **Dhwani** (XLS-R + AASIST) | ✅ 4/4 Verified |
+| 🛡️ | Financial risk level + response playbook on every result | **Risk Engine** | ✅ Verified |
+| 📄 | One-click forensic PDF + ZIP evidence packages | reportlab + zip | ✅ Verified |
+| 📜 | Detection history with verdict / risk / score tracking | built-in | ✅ Verified |
 
-## 2. Current supported functionality (all verified)
+---
 
-| Capability | Status | Evidence |
+## 🏆 Team HACKSTREET — RAKSHAM PS3
+
+| Member | Role | Owns |
 |---|---|---|
-| Image forgery detection + pixel-level localization (TruFor) | ✅ Working | `decision: real, integrity: 0.64` via live API |
-| Anomaly heatmap, confidence map, Noiseprint++ map | ✅ Working | PNGs saved per job in `data/jobs/<job_id>/` |
-| Video deepfake detection, 12 selectable models (DeepfakeBench) | ✅ Working | xception: 20 frames, verdict FAKE on synthetic clip, 15.6 s CPU |
-| Voice spoof detection, Hindi/English/multilingual (Dhwani) | ✅ Working | 4/4: real EN/HI → REAL, TTS EN/HI → FAKE (API + browser tested) |
-| Financial risk level + response playbook on every result | ✅ Working | CRITICAL/HIGH/MEDIUM/LOW + action checklist in UI, history, PDF |
-| Suspicious-segment detection + keyframes | ✅ Working | 1 segment found on test clip |
-| JWT auth (register/login, analyst/investigator/admin roles) | ✅ Working | register → login → Bearer token flow tested |
-| Detection history (per-user, admin sees all) | ✅ Working | `GET /api/history` returned test job |
-| PDF report download (valid `%PDF-`, ~1.4 MB) | ✅ Working | `GET /api/reports/{id}/pdf` |
-| ZIP evidence package (valid PK zip, ~1.1 MB) | ✅ Working | `GET /api/reports/{id}/zip` |
-| Browser UI (home, login, register, image, video, history) | ✅ Working | all pages HTTP 200, same-origin API (no CORS issues) |
+| **KRISHNA R** | 🧠 Team Lead · Backend & AI Systems | FastAPI core, model integration, architecture |
+| **KRRISH KUMAR** | 🎨 Frontend & UI/UX Engineer | Web UI, orange theme, result visualizations |
+| **AFFAN LATIF** | 🎙️ ML Engineer · Voice Forensics | Dhwani voice pipeline, audio validation |
+| **RITIK RAUSHAN** | 🔒 Security & QA Engineer | Auth hardening, testing, evidence reports |
 
-## 3. Architecture overview
+> **Problem Statement 3 — Deepfake Detection for Financial Communications.**
+> Built for the RAKSHAM AI Cybersecurity Hackathon.
 
-```
-Browser (static HTML/JS served by FastAPI, same origin)
-   │  POST /detect (image) · POST /api/deepfakebench/analyze (video)
-   ▼
-FastAPI (app/main.py) + JWT auth (app/auth) + history (app/history)
-   ├── TruForAdapter (app/adapters/trufor_adapter.py) ──► TruFor (TruFor-main/)
-   ├── DeepfakeBenchAdapter (app/adapters/deepfakebench_adapter.py) ──► 12 models (models/vendors/…)
-   └── Reports (app/reports/) ──► reportlab PDF + ZIP evidence package
-Runtime data: data/jobs/<job_id>/ (heatmaps, keyframes, timeline.json, report.pdf/zip)
+---
+
+## 🖥️ Live Demo (2 minutes)
+
+```bash
+# 1. Start the backend (serves API + UI together — no Docker, no build step)
+$env:PYTHONIOENCODING = "utf-8"
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+# 2. Open the app
+http://localhost:8000/web/index_main.html   # Register → Login (admin/admin123 for demo)
 ```
 
-## 4. Technology stack
+👉 **Follow the demo:** [`VIDEO_SCRIPT_YT.md`](VIDEO_SCRIPT_YT.md) — timestamped 2-minute
+ walkthrough (login → image → video → voice → reports).
 
-| Layer | Stack |
+---
+
+## 🧠 How it works
+
+```mermaid
+flowchart LR
+    B[Browser UI<br/>7 pages] --> API[FastAPI :8000<br/>JWT auth]
+    API --> T[TruFor<br/>images]
+    API --> V[DeepfakeBench ×12<br/>videos]
+    API --> D[Dhwani ONNX<br/>voice]
+    T & V & D --> R[Risk Engine<br/>CRITICAL/HIGH/MEDIUM/LOW<br/>+ action playbook]
+    R --> H[History + PDF/ZIP evidence]
+```
+
+📐 Full as-built diagram: [`docs/architecture/vajra_end_to_end_architecture.md`](docs/architecture/vajra_end_to_end_architecture.md)
+
+<details>
+<summary><b>🔬 Model details (click to expand)</b></summary>
+
+| Model | Task | Source | Weights |
+|---|---|---|---|
+| TruFor `detconfcmx` | Image forgery + localization | [grip-unina/TruFor](https://github.com/grip-unina/TruFor) | `models/trufor.pth.tar` (~268 MB) |
+| DeepfakeBench ×12 | Video (Xception, Meso-4, F3Net, EfficientNet-B4, Capsule, SRM, RECCE, SPSL, UCF, CNN-AUG, CORE…) | [SCLBD/DeepfakeBench](https://github.com/SCLBD/DeepfakeBench) | `models/vendors/…/weights/` (13 files) |
+| Dhwani | Multilingual voice spoof (en/hi/ta/te/ml) | [HuggingFace](https://huggingface.co/ayush2635/Dhwani-Multilingual-Deepfake-Audio-Detection-Model) (MIT) | `models/audio_dhwani/best_model.onnx` (~1.26 GB) |
+
+> We **integrate** these models — we did not train them. All credit to the original authors.
+> Technical model names are intentionally unchanged. Weights are gitignored, never committed.
+
+</details>
+
+<details>
+<summary><b>✅ Verified results (click to expand)</b></summary>
+
+| Test | Result |
 |---|---|
-| Backend | Python, FastAPI, Uvicorn |
-| Frontend | Vanilla HTML/CSS/JS + DaisyUI/Tailwind CDN (no build step, no npm needed) |
-| Image AI | TruFor (`detconfcmx`, SegFormer mit_b2 + Noiseprint++), PyTorch CPU |
-| Video AI | DeepfakeBench ensemble (12 detectors: Xception, Meso-4, Meso-4-Inception, F3Net, EfficientNet-B4, Capsule, SRM, RECCE, SPSL, UCF, CNN-AUG, CORE) |
-| Audio AI | Dhwani spoof detector (XLS-R + AASIST, ONNX Runtime, multilingual en/hi/ta/te/ml) |
-| Auth | JWT (`python-jose`), `passlib`/`bcrypt` |
-| Reports | `reportlab`, stdlib `zipfile` |
-| Video I/O | OpenCV (`cv2`), FFmpeg (test-media generation) |
+| Image (TruFor, live API) | REAL, integrity 0.64 + heatmaps |
+| Video (xception, 20 frames, CPU) | 1 segment, ~16 s |
+| Voice EN real / HI real (FLEURS) | REAL 0.04% / 0.02% |
+| Voice EN fake / HI fake (MMS-TTS) | FAKE 78% / 99% |
+| History + PDF (`%PDF-`) + ZIP (`PK`) | HTTP 200, valid files |
+| Risk engine | FAKE→CRITICAL + 5 actions, in API + UI + PDF |
 
-## 5. System requirements
+Full evidence log: [`VAJRA_SETUP_READINESS_REPORT.md`](VAJRA_SETUP_READINESS_REPORT.md)
 
-- **OS:** Windows 10/11 (verified on Windows 11). Linux/macOS should work with the same Python steps.
-- **RAM:** 6 GB minimum, 8 GB+ recommended (TruFor).
-- **Disk:** ~3 GB free (weights ~1.4 GB + dependencies).
-- **GPU:** Not required. CPU inference verified. A 4 GB GTX 1650 Ti is present
-  on the reference machine but unused (CPU-only PyTorch); GPU builds are untested.
-- **Docker:** **Not required.** Native Windows run is the documented path.
-  `Dockerfile`/`docker-compose.yml` remain as an untested fallback.
+</details>
 
-## 6. Versions
+---
 
-| Component | Verified version |
-|---|---|
-| Python | 3.14.2 (repo originally targeted 3.11; native run verified on 3.14 — see §12) |
-| Node.js / npm | 25.8.1 / 11.14.1 (only used for a JS syntax check; **not required** to run) |
-| PyTorch / torchvision | 2.13.0+cpu / 0.28.0+cpu |
-| NumPy | 2.4.6 (repo pins `<2.0`, but 1.x has no Python-3.14 wheels — see §12) |
-| FFmpeg | 9.0.2 (`winget install Gyan.FFmpeg`) |
-| Git / Git LFS | 2.53.0 / 3.7.1 |
+## 🚀 Setup
 
-## 7. Native Windows setup
+<details open>
+<summary><b>1️⃣ Dependencies (Windows native, no Docker needed)</b></summary>
 
 ```powershell
-# 1. (Optional, recommended) create an isolated environment
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-
-# 2. Core runtime dependencies (verified set)
+python -m venv venv; .\venv\Scripts\Activate.ps1
 pip install fastapi "uvicorn[standard]" python-dotenv python-multipart `
-  torch torchvision opencv-python pillow "numpy>=1.24.0" tqdm yacs timm `
-  scipy scikit-image pyyaml aiofiles matplotlib `
-  "python-jose[cryptography]==3.3.0" "passlib[bcrypt]==1.7.4" "bcrypt==3.2.0" `
-  "reportlab==4.0.7" httpx pytest pytest-cov pytest-asyncio `
-  simplejson fvcore iopath av scikit-learn albumentations tensorboard `
-  omegaconf efficientnet-pytorch lmdb pretrainedmodels kornia `
-  loralib transformers einops imgaug gdown
-
-# 3b. Audio (voice spoof) dependencies
-pip install onnxruntime soundfile scipy datasets huggingface_hub
-# NOTE: datasets pulls torchcodec, whose DLL may fail to load on some Windows
-# machines. It is only needed to fetch FLEURS test clips, not to run the app.
-
-# 3. FFmpeg (for test-media generation; video decode itself uses OpenCV)
-winget install -e --id Gyan.FFmpeg --accept-source-agreements --accept-package-agreements
-# then refresh PATH in new shells
+  torch torchvision opencv-python pillow numpy tqdm yacs timm scipy `
+  scikit-image pyyaml aiofiles matplotlib "python-jose[cryptography]==3.3.0" `
+  "passlib[bcrypt]==1.7.4" "bcrypt==3.2.0" "reportlab==4.0.7" httpx pytest `
+  simplejson fvcore iopath av scikit-learn albumentations tensorboard omegaconf `
+  efficientnet-pytorch lmdb pretrainedmodels kornia loralib transformers einops `
+  imgaug gdown onnxruntime soundfile datasets huggingface_hub
+winget install -e --id Gyan.FFmpeg   # test-media generation
 ```
 
-> `dlib` (a DeepfakeBench **training-time-only** dependency) has no Python-3.14
-> Windows wheels and is intentionally **not** installed. `tools/build_dfbench_model.py`
-> contains a documented stub + `np.sctypes` compat shim so inference works
-> without it. Do not "fix" this by editing `models/vendors/` (third-party code).
+</details>
 
-## 8. Model download / setup
-
-Weights are **not** in git (see `.gitignore`). Download the two archives from the
-project's Google Drive folder and extract into `models/`:
-
-- `TruFor_weights.zip` (~249 MB) → provides `weights/trufor.pth.tar`
-- `vendors.zip` (~1.1 GB) → provides `vendors/DeepfakeBench/…` (framework + weights)
+<details>
+<summary><b>2️⃣ Model weights (one-time download, ~2.7 GB total)</b></summary>
 
 ```powershell
-pip install gdown
-mkdir models_dl
+# Image + video weights (Google Drive)
 gdown --folder "https://drive.google.com/drive/folders/117IJoriB7kJB9vWQOuj7_S6lNRSOyZ_A" -O models_dl --continue
-Expand-Archive -Path "models_dl\TruFor_weights.zip" -DestinationPath "models" -Force
-Expand-Archive -Path "models_dl\vendors.zip" -DestinationPath "models" -Force
-# The TruFor zip nests the file one level deep; the app expects it at models/ :
+Expand-Archive "models_dl\TruFor_weights.zip" -DestinationPath "models" -Force
+Expand-Archive "models_dl\vendors.zip" -DestinationPath "models" -Force
 Copy-Item models\weights\trufor.pth.tar models\trufor.pth.tar
-```
 
-Expected layout after extraction (verified):
-
-```
-models/
-├── trufor.pth.tar                                   (~268 MB on disk, 952 tensors)
-└── vendors/DeepfakeBench/training/
-    ├── weights/  xception_best.pth, meso4_best.pth, meso4Incep_best.pth,
-    │              f3net_best.pth, effnb4_best.pth, capsule_best.pth, srm_best.pth,
-    │              recce_best.pth, spsl_best.pth, ucf_best.pth, cnnaug_best.pth,
-    │              core_best.pth (+ ffd_best.pth spare)
-    └── pretrained/xception-b5690688.pth             (ImageNet backbone, 87 MB)
-```
-
-Verify: `(Get-ChildItem models\vendors\DeepfakeBench\training\weights\*.pth).Count`
-should be **13** (12 registry models + 1 spare `ffd_best.pth`).
-
-### Audio model (Dhwani, ~1.2 GB)
-
-```powershell
+# Voice model (Hugging Face)
 python -c "from huggingface_hub import snapshot_download; snapshot_download('ayush2635/Dhwani-Multilingual-Deepfake-Audio-Detection-Model', local_dir='models/audio_dhwani')"
 ```
 
-Expected: `models/audio_dhwani/best_model.onnx` (~1.26 GB).
-MIT license. We did not train it — credit to the original author (HCL Guvi Hackathon "Dhwani").
+</details>
 
-## 9. Environment variables
-
-Copy `.env.example` to `.env` and set a real secret for anything beyond local testing:
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `JWT_SECRET_KEY` | `your-secret-key-change-in-production` (dev fallback) | JWT signing — **must** be overridden outside local dev |
-| `MODEL_PATH` | `models/trufor.pth.tar` | TruFor weights path |
-| `HOST` / `PORT` | `127.0.0.1` / `8000` | Native server bind |
-| `PYTHONIOENCODING` | — (set to `utf-8` on Windows) | Prevents console `UnicodeEncodeError` from model logs |
-
-Default seeded admin: `admin` / `admin123` — change immediately after first login.
-
-## 10. Backend startup
+<details>
+<summary><b>3️⃣ Run + verify</b></summary>
 
 ```powershell
+Copy-Item .env.example .env   # then set a real JWT_SECRET_KEY inside
 $env:PYTHONIOENCODING = "utf-8"
-$env:MODEL_PATH = "models/trufor.pth.tar"
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+# UI: http://localhost:8000/web/index_main.html | API docs: http://127.0.0.1:8000/docs
+python audio_verify.py        # voice check, expects PASS 4/4 (no server needed)
 ```
 
-Health check: `http://127.0.0.1:8000/health` → `{"status":"healthy",…}`.
-Interactive API docs: `http://127.0.0.1:8000/docs`.
+</details>
 
-## 11. Frontend startup
+---
 
-No build step — the FastAPI server serves the UI directly. Open:
+## 🛡️ PS3 mapping — verify · detect · respond
 
-**http://localhost:8000/web/index_main.html**
-
-Pages: Home · Register · Login · Images/TruFor (`index.html`) ·
-Video/DeepfakeBench (`deepfakebench.html`) · Audio/Voice-Spoof (`audio.html`) ·
-History (`history.html`).
-First visit: **Register** (password needs 8+ chars with upper/lower/digit),
-then **Login**. The frontend calls same-origin `/detect` and `/api/…`, so no
-CORS configuration is needed for local use.
-
-## 12. Image testing procedure
-
-```powershell
-$env:PYTHONIOENCODING = "utf-8"
-# fast smoke test (downscaled copy keeps CPU time low)
-ffmpeg -y -i test_data_cycle2/pexels-karina-diniz-1382740-34106777.jpg -vf scale=512:-1 test_small.jpg
-python api_smoke.py   # register/login flow is inside; prints decision + job_id
-```
-
-Reference result (verified): `status: success, decision: real, integrity: ~0.64`.
-A full-resolution 8192×6554 px photo took ~139 s on CPU; 512-px images take
-tens of seconds. Heatmaps land in `data/jobs/<job_id>/`.
-
-## 13. Video testing procedure
-
-```powershell
-# generate a legal synthetic clip (no private data involved)
-ffmpeg -y -f lavfi -i testsrc=duration=6:size=320x240:rate=10 -pix_fmt yuv420p test_vid.mp4
-# then in the browser: DeepfakeBench page → select model (e.g. xception) → upload test_vid.mp4
-```
-
-Reference result (verified, xception, CPU): 20 frames, verdict FAKE (expected —
-a synthetic test pattern is out-of-distribution), 1 suspicious segment, ~16 s.
-
-## 13b. Voice testing procedure
-
-```powershell
-python audio_verify.py   # direct adapter check, no server needed (expects 4/4 OK)
-# or in the browser: Audio page → upload a WAV/MP3 → verdict + per-window scores
-```
-
-Reference results (verified, Dhwani, CPU, live API + browser):
-
-| Clip | Source | Verdict | Fake prob |
-|---|---|---|---|
-| `test_real_en.wav` | FLEURS English (genuine) | REAL | 0.0004 |
-| `test_real_hi.wav` | FLEURS Hindi (genuine) | REAL | 0.0002 |
-| `test_fake_en.wav` | MMS-TTS English (synthesized) | FAKE | 0.78 |
-| `test_fake_hi.wav` | MMS-TTS Hindi (synthesized) | FAKE | 0.99 |
-
-Rejected alternatives (tested, honestly discarded): a wav2vec2 PA-trained model
-missed clean TTS fakes; two AST spoof models saturated or showed English bias;
-a wav2vec2-ASVspoof5 checkpoint produced constant outputs.
-
-## 14. Known limitations
-
-1. **CPU-only.** No CUDA PyTorch installed; inference times above are CPU times.
-   GPU acceleration is untested.
-2. **Python 3.14 vs repo's 3.11.** Works, but requires the two documented
-   shims in `tools/build_dfbench_model.py` (dlib stub, `np.sctypes` restore)
-   because `dlib` won't build and NumPy 1.x has no 3.14 wheels.
-3. **Windows console encoding.** Model code logs Unicode (emoji); without
-   `PYTHONIOENCODING=utf-8` (or `python -X utf8`) startup can crash with
-   `UnicodeEncodeError: 'charmap' codec…`. This is environmental, not a model bug.
-4. **Video `device="cuda"` hardcode** in `run_deepfakebench_analysis` falls back
-   to CPU automatically (`torch.cuda.is_available()` check in the adapter) —
-   verified working, but GPU has never been exercised.
-5. **Docker path untested** natively in this environment; kept as fallback only.
-6. **Default JWT secret + seeded admin** are dev conveniences — rotate before
-   any shared deployment.
-7. PS3 financial-communication features are **not implemented** (see §17 of the
-   readiness report).
-
-## 15. Troubleshooting
-
-| Symptom | Cause / fix |
+| PS3 ask | VAJRA answer |
 |---|---|
-| `TruFor model not found`, adapter not initialized | `models/trufor.pth.tar` missing — copy it out of `models/weights/` (§8) |
-| `ModuleNotFoundError: No module named 'dlib'` | Expected — the stub in `tools/build_dfbench_model.py` covers this; don't install dlib |
-| `np.sctypes was removed in NumPy 2.0` | Covered by the shim in `tools/build_dfbench_model.py`; don't downgrade NumPy on Py3.14 |
-| `UnicodeEncodeError: 'charmap' codec…` on startup | `set PYTHONIOENCODING=utf-8` before launching |
-| Image `POST /detect` is slow | Normal on CPU; use smaller images; TruFor pads to 512×512 internally |
-| Video job stuck at "processing" | Model load takes ~1 min on CPU first time; poll `GET /api/deepfakebench/jobs/{id}` |
-| `File too large` | Limits: 10 MB image, 500 MB video (`app/main.py`) |
+| Verify financial communications | Upload any image / video / voice clip → REAL-or-FAKE verdict with confidence |
+| Detect manipulation | Pixel heatmaps (images), suspicious segments + keyframes (video), windowed spoof scores (voice) |
+| Actionable review path | History with verdict / risk / score + analyst workflow |
+| Actionable reporting path | One-click forensic PDF + ZIP evidence package (includes risk + actions) |
+| Actionable response path | Risk levels CRITICAL/HIGH/MEDIUM/LOW, each with a concrete playbook (callback verification, quarantine, fraud-desk escalation…) |
 
-## 16. Third-party models
+---
 
-VAJRA integrates — but did **not** train and does **not** own — these models.
-Technical model names (TruFor, DeepfakeBench, Xception, …) are intentionally
-left unchanged throughout the codebase.
+## ⚠️ Know before you deploy
 
-- **TruFor** — GRIP, University of Naples Federico II.
-  Repo: <https://github.com/grip-unina/TruFor> ·
-  Paper: Guillaro et al., arXiv:2212.10957. A vendored copy lives in `TruFor-main/`.
-- **DeepfakeBench** — SCLBD. Repo: <https://github.com/SCLBD/DeepfakeBench> ·
-  Paper: Yan et al., arXiv:2307.01426. Framework + weights live in
-  `models/vendors/DeepfakeBench/` (downloaded, gitignored).
-- **Dhwani** — multilingual (en/hi/ta/te/ml) voice-spoof detector (XLS-R + AASIST, ONNX).
-  Source: <https://huggingface.co/ayush2635/Dhwani-Multilingual-Deepfake-Audio-Detection-Model>
-  (MIT). Weights live in `models/audio_dhwani/` (downloaded, gitignored).
+- CPU-only inference (GPU untested) · Python 3.14 needs 2 tiny documented shims (`tools/build_dfbench_model.py`)
+- Change `JWT_SECRET_KEY` + the seeded `admin/admin123` before any shared use
+- `dlib` intentionally not installed (training-only dep, stubbed) · Docker kept as untested fallback
+- Use only consented/public media for testing · dev server stays on `127.0.0.1`
 
-## 17. Third-party licenses & attribution
+---
 
-- This project's own integration code: see `docs/handover/LICENSE`
-  (MIT, © 2025 The University of Melbourne — preserved unchanged).
-- TruFor: see `TruFor-main/TruFor-main/test_docker/LICENSE.txt` and `LICENSE_CMX.txt`.
-- DeepfakeBench: see its license inside `models/vendors/DeepfakeBench/`.
-- If you publish research using this system, cite the TruFor and DeepfakeBench
-  papers above — credit belongs to the original authors.
+<div align="center">
 
-## 18. Data / privacy note
+**🛡️ VAJRA Trust Intelligence** · *Verification & AI-based Judgement for Risk Assessment*
 
-- Use only synthetic, public, or properly consented media for testing
-  (`test_data_cycle2/`, generated `testsrc` clips). Never commit private or
-  confidential financial data.
-- Runtime artifacts (`data/jobs/…`, `data/users.json`) are gitignored and stay
-  on your machine. Wipe them with `scripts/clean_test_data.ps1` (review it first).
-- The app runs on `127.0.0.1` by default; do not expose the dev server publicly.
+Built with 🔥 by **TEAM HACKSTREET** — KRISHNA R · KRRISH KUMAR · AFFAN LATIF · RITIK RAUSHAN
+
+*Don't trust the clip. **Verify it.***
+
+</div>
