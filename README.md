@@ -30,6 +30,7 @@ are **not yet implemented** — see the readiness report's PS3 matrix.
 | Image forgery detection + pixel-level localization (TruFor) | ✅ Working | `decision: real, integrity: 0.64` via live API |
 | Anomaly heatmap, confidence map, Noiseprint++ map | ✅ Working | PNGs saved per job in `data/jobs/<job_id>/` |
 | Video deepfake detection, 12 selectable models (DeepfakeBench) | ✅ Working | xception: 20 frames, verdict FAKE on synthetic clip, 15.6 s CPU |
+| Voice spoof detection, Hindi/English/multilingual (Dhwani) | ✅ Working | 4/4: real EN/HI → REAL, TTS EN/HI → FAKE (API + browser tested) |
 | Suspicious-segment detection + keyframes | ✅ Working | 1 segment found on test clip |
 | JWT auth (register/login, analyst/investigator/admin roles) | ✅ Working | register → login → Bearer token flow tested |
 | Detection history (per-user, admin sees all) | ✅ Working | `GET /api/history` returned test job |
@@ -58,6 +59,7 @@ Runtime data: data/jobs/<job_id>/ (heatmaps, keyframes, timeline.json, report.pd
 | Frontend | Vanilla HTML/CSS/JS + DaisyUI/Tailwind CDN (no build step, no npm needed) |
 | Image AI | TruFor (`detconfcmx`, SegFormer mit_b2 + Noiseprint++), PyTorch CPU |
 | Video AI | DeepfakeBench ensemble (12 detectors: Xception, Meso-4, Meso-4-Inception, F3Net, EfficientNet-B4, Capsule, SRM, RECCE, SPSL, UCF, CNN-AUG, CORE) |
+| Audio AI | Dhwani spoof detector (XLS-R + AASIST, ONNX Runtime, multilingual en/hi/ta/te/ml) |
 | Auth | JWT (`python-jose`), `passlib`/`bcrypt` |
 | Reports | `reportlab`, stdlib `zipfile` |
 | Video I/O | OpenCV (`cv2`), FFmpeg (test-media generation) |
@@ -99,6 +101,11 @@ pip install fastapi "uvicorn[standard]" python-dotenv python-multipart `
   simplejson fvcore iopath av scikit-learn albumentations tensorboard `
   omegaconf efficientnet-pytorch lmdb pretrainedmodels kornia `
   loralib transformers einops imgaug gdown
+
+# 3b. Audio (voice spoof) dependencies
+pip install onnxruntime soundfile scipy datasets huggingface_hub
+# NOTE: datasets pulls torchcodec, whose DLL may fail to load on some Windows
+# machines. It is only needed to fetch FLEURS test clips, not to run the app.
 
 # 3. FFmpeg (for test-media generation; video decode itself uses OpenCV)
 winget install -e --id Gyan.FFmpeg --accept-source-agreements --accept-package-agreements
@@ -144,6 +151,15 @@ models/
 Verify: `(Get-ChildItem models\vendors\DeepfakeBench\training\weights\*.pth).Count`
 should be **13** (12 registry models + 1 spare `ffd_best.pth`).
 
+### Audio model (Dhwani, ~1.2 GB)
+
+```powershell
+python -c "from huggingface_hub import snapshot_download; snapshot_download('ayush2635/Dhwani-Multilingual-Deepfake-Audio-Detection-Model', local_dir='models/audio_dhwani')"
+```
+
+Expected: `models/audio_dhwani/best_model.onnx` (~1.26 GB).
+MIT license. We did not train it — credit to the original author (HCL Guvi Hackathon "Dhwani").
+
 ## 9. Environment variables
 
 Copy `.env.example` to `.env` and set a real secret for anything beyond local testing:
@@ -175,7 +191,8 @@ No build step — the FastAPI server serves the UI directly. Open:
 **http://localhost:8000/web/index_main.html**
 
 Pages: Home · Register · Login · Images/TruFor (`index.html`) ·
-Video/DeepfakeBench (`deepfakebench.html`) · History (`history.html`).
+Video/DeepfakeBench (`deepfakebench.html`) · Audio/Voice-Spoof (`audio.html`) ·
+History (`history.html`).
 First visit: **Register** (password needs 8+ chars with upper/lower/digit),
 then **Login**. The frontend calls same-origin `/detect` and `/api/…`, so no
 CORS configuration is needed for local use.
@@ -203,6 +220,26 @@ ffmpeg -y -f lavfi -i testsrc=duration=6:size=320x240:rate=10 -pix_fmt yuv420p t
 
 Reference result (verified, xception, CPU): 20 frames, verdict FAKE (expected —
 a synthetic test pattern is out-of-distribution), 1 suspicious segment, ~16 s.
+
+## 13b. Voice testing procedure
+
+```powershell
+python audio_verify.py   # direct adapter check, no server needed (expects 4/4 OK)
+# or in the browser: Audio page → upload a WAV/MP3 → verdict + per-window scores
+```
+
+Reference results (verified, Dhwani, CPU, live API + browser):
+
+| Clip | Source | Verdict | Fake prob |
+|---|---|---|---|
+| `test_real_en.wav` | FLEURS English (genuine) | REAL | 0.0004 |
+| `test_real_hi.wav` | FLEURS Hindi (genuine) | REAL | 0.0002 |
+| `test_fake_en.wav` | MMS-TTS English (synthesized) | FAKE | 0.78 |
+| `test_fake_hi.wav` | MMS-TTS Hindi (synthesized) | FAKE | 0.99 |
+
+Rejected alternatives (tested, honestly discarded): a wav2vec2 PA-trained model
+missed clean TTS fakes; two AST spoof models saturated or showed English bias;
+a wav2vec2-ASVspoof5 checkpoint produced constant outputs.
 
 ## 14. Known limitations
 
@@ -247,6 +284,9 @@ left unchanged throughout the codebase.
 - **DeepfakeBench** — SCLBD. Repo: <https://github.com/SCLBD/DeepfakeBench> ·
   Paper: Yan et al., arXiv:2307.01426. Framework + weights live in
   `models/vendors/DeepfakeBench/` (downloaded, gitignored).
+- **Dhwani** — multilingual (en/hi/ta/te/ml) voice-spoof detector (XLS-R + AASIST, ONNX).
+  Source: <https://huggingface.co/ayush2635/Dhwani-Multilingual-Deepfake-Audio-Detection-Model>
+  (MIT). Weights live in `models/audio_dhwani/` (downloaded, gitignored).
 
 ## 17. Third-party licenses & attribution
 

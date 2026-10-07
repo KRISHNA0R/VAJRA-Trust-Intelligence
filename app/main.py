@@ -20,6 +20,7 @@ try:
     # Try relative imports first (when run from app directory)
     from adapters.trufor_adapter import TruForAdapter
     from adapters.deepfakebench_adapter import DeepfakeBenchAdapter
+    from adapters.audio_adapter import AudioSpoofAdapter
     from auth.user_manager import user_manager
     from auth.decorators import get_current_user, get_current_admin, get_optional_user
     from history.history_manager import history_manager
@@ -29,6 +30,7 @@ except ImportError:
     # Fallback to absolute imports (when run from project root)
     from app.adapters.trufor_adapter import TruForAdapter
     from app.adapters.deepfakebench_adapter import DeepfakeBenchAdapter
+    from app.adapters.audio_adapter import AudioSpoofAdapter
     from app.auth.user_manager import user_manager
     from app.auth.decorators import get_current_user, get_current_admin, get_optional_user
     from app.history.history_manager import history_manager
@@ -49,6 +51,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize adapter as global variable
 detection_adapter = None
+audio_adapter = None
 
 # Thread pool for CPU-intensive tasks
 executor = ThreadPoolExecutor(max_workers=2)
@@ -114,6 +117,22 @@ ALLOWED_VIDEO_TYPES = {
     "video/webm",
     "video/x-matroska",  # MKV
     "application/octet-stream"  # Generic binary, for some MP4 files
+}
+MAX_AUDIO_SIZE = 50 * 1024 * 1024  # 50MB
+ALLOWED_AUDIO_TYPES = {
+    "audio/wav",
+    "audio/x-wav",
+    "audio/wave",
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/ogg",
+    "audio/flac",
+    "audio/x-flac",
+    "audio/mp4",
+    "audio/x-m4a",
+    "audio/aac",
+    "audio/webm",
+    "application/octet-stream",  # Generic binary, for odd client MIME types
 }
 
 
@@ -466,12 +485,16 @@ async def get_models_status(user: dict = Depends(get_current_user)):
     
     return {
         "trufor": {
-            "available": trufor_available,
-            "path": str(trufor_path) if trufor_available else None
+            "available": trufor_path.exists(),
+            "path": str(trufor_path) if trufor_path.exists() else None
         },
         "deepfakebench": {
             "available_models": available_models,
             "total_models": len(WEIGHT_REGISTRY)
+        },
+        "audio": {
+            "available": Path("models/audio_dhwani/best_model.onnx").exists(),
+            "model": "dhwani-spoof"
         }
     }
 
@@ -1282,6 +1305,118 @@ async def extract_keyframe(job_id: str, timestamp: float = 0.0):
     except Exception as e:
         logger.error(f"Failed to extract keyframe: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to extract keyframe: {str(e)}")
+
+
+# =============================================================================
+# Audio Spoof (Voice Deepfake) API Endpoints
+# =============================================================================
+
+def _get_audio_adapter():
+    """Lazily initialize the audio spoof adapter (loads ~380MB model once)."""
+    global audio_adapter
+    if audio_adapter is None:
+        audio_adapter = AudioSpoofAdapter(
+            model_dir=os.getenv("AUDIO_MODEL_PATH", "models/audio_dhwani")
+        )
+        logger.info("Audio spoof adapter initialized successfully")
+    return audio_adapter
+
+
+@app.get("/api/audio/models")
+async def get_audio_models():
+    """Get audio spoof model info and availability (public)."""
+    audio_path = Path("models/audio_dhwani/best_model.onnx")
+    return JSONResponse(content={
+        "models": [{
+            "key": "dhwani-spoof",
+            "name": "Dhwani Spoof Detector (multilingual: en/hi/ta/te/ml)",
+            "speed": "Fast",
+            "accuracy": "High",
+            "available": audio_path.exists()
+        }]
+    })
+
+
+@app.post("/api/audio/analyze")
+async def analyze_audio(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """
+    Analyze an audio clip for voice spoofing / AI-generated speech
+    (requires authentication). Runs inline; typical CPU time is seconds.
+    """
+    if file.content_type not in ALLOWED_AUDIO_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type: {file.content_type}. "
+                   "Allowed: WAV, MP3, OGG, FLAC, M4A, AAC, WebM audio"
+        )
+
+    content = await file.read()
+    if len(content) > MAX_AUDIO_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File too large: {len(content)/(1024*1024):.1f}MB. Maximum: 50MB"
+        )
+
+    timestamp = int(time.time())
+    file_hash = hashlib.sha256(content).hexdigest()[:12]
+    job_id = f"aud_{file_hash}_{timestamp}"
+    logger.info(f"User {user['username']} audio analysis: {file.filename} ({len(content)} bytes) -> {job_id}")
+
+    history_manager.create_job_metadata(
+        job_id=job_id,
+        username=user["username"],
+        filename=file.filename,
+        detection_type="audio",
+        model="dhwani-spoof"
+    )
+
+    try:
+        adapter = _get_audio_adapter()
+    except Exception as e:
+        logger.error(f"Audio model unavailable: {e}")
+        history_manager.update_job_status(job_id=job_id, status="failed",
+                                          error="Audio model unavailable")
+        raise HTTPException(status_code=503, detail="Audio model unavailable")
+
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        executor, adapter.analyze, content, file.filename or "audio"
+    )
+
+    if not result.get("success"):
+        history_manager.update_job_status(
+            job_id=job_id, status="failed",
+            error=result.get("error", "Analysis failed")
+        )
+        raise HTTPException(status_code=400, detail=result.get("error", "Analysis failed"))
+
+    # Persist input + chunk scores for reports/evidence
+    job_dir = DATA_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+    with open(job_dir / "input_audio", "wb") as f:
+        f.write(content)
+    with open(job_dir / "audio_scores.json", "w") as f:
+        json.dump(result.get("chunks", []), f, indent=2)
+
+    history_manager.update_job_status(
+        job_id=job_id,
+        status="completed",
+        result={
+            "verdict": result.get("verdict", "unknown"),
+            "score": result.get("fake_prob", 0),
+            "fake_prob": result.get("fake_prob", 0),
+            "confidence": result.get("confidence", 0),
+            "duration_sec": result.get("duration_sec", 0),
+            "num_chunks": result.get("num_chunks", 0),
+            "model": result.get("model", "dhwani-spoof"),
+        }
+    )
+
+    result["job_id"] = job_id
+    return JSONResponse(content=result)
 
 
 if __name__ == "__main__":

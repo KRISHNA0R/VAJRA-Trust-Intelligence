@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>VAJRA Trust Intelligence - Audio Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.9.4/dist/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/web/css/app-compiled.css">
+    <style>
+        .page-content { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
+        .header { text-align: center; margin: 24px 0; }
+        .header h1 { font-size: 2rem; font-weight: 800; }
+        .subtitle { opacity: .75; margin-top: 8px; }
+        .upload-area { border: 2px dashed #888; border-radius: 12px; padding: 36px 20px;
+            text-align: center; cursor: pointer; margin: 20px 0; }
+        .upload-area:hover { border-color: #570df8; background: rgba(87,13,248,.05); }
+        .verdict-fake { color: #dc2626; font-weight: 800; font-size: 1.6rem; }
+        .verdict-real { color: #16a34a; font-weight: 800; font-size: 1.6rem; }
+        .bar { height: 14px; border-radius: 7px; background: #e5e7eb; overflow: hidden; }
+        .bar > div { height: 100%; background: linear-gradient(90deg,#f59e0b,#dc2626); }
+        table.chunks { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        table.chunks th, table.chunks td { border: 1px solid #ddd; padding: 6px 10px; text-align: center; }
+        .card { background: rgba(255,255,255,.6); border-radius: 12px; padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.08); margin-top: 20px; }
+        #result, #errorBox { display: none; }
+    </style>
+</head>
+<body>
+    <div class="navbar bg-base-100 shadow-lg" role="navigation" aria-label="Main navigation" style="padding-top: 8px;">
+        <div class="flex-1">
+            <a href="/web/index_main.html" class="btn btn-ghost normal-case text-xl" aria-label="VAJRA Trust Intelligence Home">🛡️ VAJRA Trust Intelligence</a>
+        </div>
+        <div class="hidden lg:flex">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/web/index_main.html">🏠 Home</a></li>
+                <li><a href="/web/index.html">🖼️ Images (TruFor)</a></li>
+                <li><a href="/web/deepfakebench.html">🎬 Video (DeepfakeBench)</a></li>
+                <li><a href="/web/audio.html" class="active" aria-current="page">🎙️ Audio (Voice Spoof)</a></li>
+                <li id="nav-history-li" style="display: none;"><a href="/web/history.html" id="nav-history">📜 History</a></li>
+                <li id="nav-login-li" style="display: none;"><a href="/web/login.html" id="nav-login">Login</a></li>
+                <li id="nav-register-li" style="display: none;"><a href="/web/register.html" id="nav-register">Register</a></li>
+                <li id="nav-logout-li" style="display: none;"><a href="#" id="nav-logout">Logout</a></li>
+            </ul>
+        </div>
+        <div class="lg:hidden">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/web/index.html">🖼️</a></li>
+                <li><a href="/web/deepfakebench.html">🎬</a></li>
+                <li><a href="/web/audio.html" class="active">🎙️</a></li>
+                <li id="nav-mobile-history" style="display:none;"><a href="/web/history.html">📜</a></li>
+                <li id="nav-mobile-login" style="display:none;"><a href="/web/login.html">Login</a></li>
+                <li id="nav-mobile-register" style="display:none;"><a href="/web/register.html">Register</a></li>
+                <li id="nav-mobile-logout" style="display:none;"><a href="#" id="mobile-logout">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="header">
+            <h1>🎙️ VAJRA Voice Spoof Detection</h1>
+            <p class="subtitle">Verification &amp; AI-based Judgement for Risk Assessment — detect AI-generated or cloned speech (Hindi, English &amp; more)</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea" tabindex="0" role="button" aria-label="Upload audio file">
+            <div style="font-size:2.4rem;">🎙️</div>
+            <div><b>Click to choose an audio file</b> or drag &amp; drop here</div>
+            <div style="opacity:.7; font-size:.9rem;">WAV, MP3, OGG, FLAC, M4A, AAC &bull; Max 50MB</div>
+            <input type="file" id="fileInput" accept="audio/*,.wav,.mp3,.ogg,.flac,.m4a,.aac,.webm" style="display:none;">
+        </div>
+        <div id="fileName" style="text-align:center; font-weight:600;"></div>
+
+        <div style="text-align:center; margin-top:16px;">
+            <button id="analyzeBtn" class="btn btn-primary" disabled>Select a file to start analysis</button>
+        </div>
+
+        <div id="progress" class="card" style="display:none; text-align:center;">
+            <span class="loading loading-spinner loading-lg"></span>
+            <p>Analyzing voice… (a few seconds on CPU)</p>
+        </div>
+
+        <div id="errorBox" class="card" style="border-left:6px solid #dc2626;"></div>
+
+        <div id="result" class="card">
+            <h2 style="font-size:1.3rem; font-weight:700;">Result</h2>
+            <p id="verdict"></p>
+            <p>Spoof (fake) probability: <b id="fakeProb"></b></p>
+            <div class="bar"><div id="fakeBar" style="width:0%"></div></div>
+            <p style="margin-top:8px;">Duration: <b id="duration"></b> &bull; Confidence: <b id="confidence"></b> &bull; Job: <code id="jobId"></code></p>
+            <h3 style="font-weight:700; margin-top:12px;">Per-window scores</h3>
+            <table class="chunks"><thead><tr><th>#</th><th>Start (s)</th><th>End (s)</th><th>Fake prob</th></tr></thead><tbody id="chunkRows"></tbody></table>
+            <p style="margin-top:12px;">
+                <a id="pdfLink" class="btn btn-sm btn-outline" href="#">📄 PDF report</a>
+                <a id="zipLink" class="btn btn-sm btn-outline" href="#">📦 Evidence ZIP</a>
+                <a href="/web/history.html" class="btn btn-sm btn-ghost">📜 History</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', e => e.preventDefault());
+        uploadArea.addEventListener('drop', e => { e.preventDefault(); setFile(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+
+        function setFile(f) {
+            if (!f) return;
+            selectedFile = f;
+            document.getElementById('fileName').textContent = f.name + ' (' + (f.size/1024).toFixed(0) + ' KB)';
+            analyzeBtn.disabled = false;
+            analyzeBtn.textContent = 'Analyze voice';
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) { alert('Please log in first.'); window.location.href = '/web/login.html'; return; }
+            document.getElementById('progress').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('errorBox').style.display = 'none';
+            analyzeBtn.disabled = true;
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                const response = await fetch('/api/audio/analyze', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('access_token'); localStorage.removeItem('user');
+                        window.location.href = '/web/login.html'; return;
+                    }
+                    const err = await response.json();
+                    throw new Error(err.detail || ('Server error ' + response.status));
+                }
+                const r = await response.json();
+                const isFake = r.verdict === 'FAKE';
+                document.getElementById('verdict').innerHTML =
+                    '<span class="' + (isFake ? 'verdict-fake' : 'verdict-real') + '">' +
+                    (isFake ? '⚠️ FAKE / SPOOFED VOICE' : '✅ REAL / BONAFIDE VOICE') + '</span>';
+                document.getElementById('fakeProb').textContent = (r.fake_prob*100).toFixed(2) + '%';
+                document.getElementById('fakeBar').style.width = (r.fake_prob*100).toFixed(1) + '%';
+                document.getElementById('duration').textContent = r.duration_sec + 's';
+                document.getElementById('confidence').textContent = (r.confidence*100).toFixed(1) + '%';
+                document.getElementById('jobId').textContent = r.job_id;
+                document.getElementById('chunkRows').innerHTML = (r.chunks||[]).map(c =>
+                    `<tr><td>${c.chunk+1}</td><td>${c.start}</td><td>${c.end}</td><td>${(c.fake_prob*100).toFixed(1)}%</td></tr>`).join('');
+                document.getElementById('pdfLink').href = `/api/reports/${r.job_id}/pdf`;
+                document.getElementById('zipLink').href = `/api/reports/${r.job_id}/zip`;
+                document.getElementById('result').style.display = 'block';
+                attachReportAuth();
+            } catch (e) {
+                const box = document.getElementById('errorBox');
+                box.textContent = 'Analysis failed: ' + e.message;
+                box.style.display = 'block';
+            } finally {
+                document.getElementById('progress').style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        // Reports endpoints need auth; fetch as blob with token instead of plain links
+        function attachReportAuth() {
+            const token = localStorage.getItem('access_token');
+            for (const id of ['pdfLink', 'zipLink']) {
+                const a = document.getElementById(id);
+                a.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const resp = await fetch(a.href, { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (!resp.ok) { alert('Download failed: ' + resp.status); return; }
+                    const blob = await resp.blob();
+                    const url = URL.createObjectURL(blob);
+                    const tmp = document.createElement('a');
+                    tmp.href = url;
+                    tmp.download = (document.getElementById('jobId').textContent || 'report') + (id === 'pdfLink' ? '.pdf' : '.zip');
+                    tmp.click(); URL.revokeObjectURL(url);
+                }, { once: true });
+            }
+        }
+
+        // Navbar auth state (same convention as other pages)
+        (function() {
+            const token = localStorage.getItem('access_token');
+            const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v; };
+            if (token) {
+                show('nav-history-li','block'); show('nav-logout-li','block');
+                show('nav-login-li','none'); show('nav-register-li','none');
+                show('nav-mobile-history','flex'); show('nav-mobile-logout','flex');
+                show('nav-mobile-login','none'); show('nav-mobile-register','none');
+                const out = async (e) => { e.preventDefault();
+                    try { await fetch('/api/auth/logout', { method:'POST', headers:{'Authorization':`Bearer ${token}`} }); } catch(_){}
+                    localStorage.removeItem('access_token'); localStorage.removeItem('user');
+                    window.location.href = '/web/login.html'; };
+                const b1 = document.getElementById('nav-logout'); if (b1) b1.addEventListener('click', out);
+                const b2 = document.getElementById('mobile-logout'); if (b2) b2.addEventListener('click', out);
+            } else {
+                show('nav-history-li','none'); show('nav-logout-li','none');
+                show('nav-login-li','block'); show('nav-register-li','block');
+                show('nav-mobile-history','none'); show('nav-mobile-logout','none');
+                show('nav-mobile-login','flex'); show('nav-mobile-register','flex');
+            }
+        })();
+    </script>
+</body>
+</html>

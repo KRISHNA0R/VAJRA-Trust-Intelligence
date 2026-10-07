@@ -251,6 +251,10 @@ class PDFReportGenerator:
             model_name = result.get("model_name", metadata.get("model", "Unknown"))
             total_frames = result.get("total_frames", 0)
             summary_text += f"Frame-level deepfake detection was performed using the <b>{model_name}</b> model on {total_frames} frames."
+        elif detection_type == "audio":
+            duration = result.get("duration_sec", 0)
+            n_chunks = result.get("num_chunks", 0)
+            summary_text += f"Voice spoof analysis was performed with the <b>Dhwani Spoof Detector</b> on {duration:.1f}s of audio ({n_chunks} analysis windows)."
 
         story.append(Paragraph(summary_text, self.styles['Normal']))
         story.append(Spacer(1, 0.3*inch))
@@ -322,6 +326,27 @@ class PDFReportGenerator:
                 ["<b>Sampling Rate:</b>", f"{fps:.1f} FPS"],
                 ["<b>Suspicious Frames:</b>", f"{suspicious_frames} / {total_frames} ({suspicious_frames/total_frames*100:.1f}%)" if total_frames > 0 else "N/A"],
                 ["<b>Suspicious Segments:</b>", f"{suspicious_segments}"],
+            ]
+
+            score_table = Table(score_data, colWidths=[2.2*inch, 4.3*inch])
+            score_table.setStyle(TableStyle([
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            story.append(score_table)
+        elif detection_type == "audio":
+            # Audio spoof-specific scores
+            fake_prob = result.get("fake_prob", score)
+            confidence = result.get("confidence", 0)
+            duration = result.get("duration_sec", 0)
+            n_chunks = result.get("num_chunks", 0)
+
+            score_data = [
+                ["<b>Spoof (Fake) Probability:</b>", f"{fake_prob:.2%}"],
+                ["<b>Verdict Confidence:</b>", f"{confidence:.2%}"],
+                ["<b>Audio Duration:</b>", f"{duration:.1f}s"],
+                ["<b>Analysis Windows:</b>", f"{n_chunks}"],
             ]
 
             score_table = Table(score_data, colWidths=[2.2*inch, 4.3*inch])

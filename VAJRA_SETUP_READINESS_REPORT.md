@@ -221,3 +221,29 @@ browser was available in this environment, so button-click UX is
 code-reviewed, not click-tested; (b) inference is CPU-only and slow on large
 images. Both are documented with mitigations. No PS3 feature work has started —
 that is the correct next phase on this clean baseline.
+
+---
+
+### 19. Addendum (2026-10-07): Voice Spoof Detection
+
+**Status: WORKING, verified 4/4 in API + browser.**
+
+- New capability: `POST /api/audio/analyze` (auth) + `app/web/audio.html`
+  (navbar-linked from Home/Images/Video/History, home-page option card).
+- Model: Dhwani ONNX (`models/audio_dhwani/best_model.onnx`, ~1.26 GB, MIT),
+  XLS-R + AASIST, 16 kHz mono, 3 s windows, labels 0=real / 1=fake.
+- Validation (all real data, no placeholders): genuine FLEURS EN/HI clips →
+  REAL (0.0004/0.0002); MMS-TTS-synthesized EN/HI clips → FAKE (0.78/0.99).
+  Browser UI test: Hindi fake → "FAKE / SPOOFED VOICE" 99.39%;
+  Hindi real → "REAL / BONAFIDE VOICE" 0.02%. Audio PDF/ZIP reports verified
+  (valid `%PDF-` / `PK` magics). Fixtures + rerunnable check:
+  `test_{real,fake}_{en,hi}.wav` + `audio_verify.py`; API check: `audio_e2e.py`.
+- Honestly rejected after testing: wav2vec2 PA-trained model (missed clean TTS),
+  AST-ASVspoof5 (saturated, overfit), AST-ASVspoof2019 (Hindi-real bias, 3/4),
+  wav2vec2-ASVspoof5 checkpoint (constant outputs). Their downloads were deleted.
+- Deps added: `onnxruntime`, `soundfile`, `scipy`, `datasets`, `huggingface_hub`
+  (note: torchcodec DLL fails to load on this machine — only needed for fetching
+  FLEURS clips, not for running).
+- PS3 matrix update: "Financial communication context" remains ❌, but voice
+  (the highest-risk channel for financial fraud calls) is now covered at the
+  detection layer.
